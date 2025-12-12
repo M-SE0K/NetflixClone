@@ -645,10 +645,13 @@ const SignIn = () => {
           <AnimatePresence mode="wait">
             <motion.div
               key={isLoginMode ? 'login-form' : 'register-form'}
-              initial={{ opacity: 0, y: 12, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -12, scale: 0.98 }}
-              transition={{ duration: 1, ease: 'easeInOut' }}
+              initial={{ opacity: 0, x: 60, scale: 0.98 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, x: -60, scale: 0.98 }}
+              transition={{
+                duration: 0.65,
+                ease: [0.175, 0.885, 0.32, 1.275], // backInRight 느낌
+              }}
             >
               <InputGroup>
                 <Input
@@ -678,10 +681,13 @@ const SignIn = () => {
 
               {!isLoginMode && (
                 <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 1, ease: 'easeInOut' }}
+                  initial={{ opacity: 0, x: 40, scale: 0.98 }}
+                  animate={{ opacity: 1, x: 0, scale: 1 }}
+                  exit={{ opacity: 0, x: -40, scale: 0.98 }}
+                  transition={{
+                    duration: 0.55,
+                    ease: [0.6, -0.28, 0.735, 0.045], // backOutLeft 느낌
+                  }}
                 >
                   <InputGroup>
                     <Input

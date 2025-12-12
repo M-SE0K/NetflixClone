@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import SignIn from './pages/SignIn';
 import Home from './pages/Home';
 import Popular from './pages/Popular';
+import Search from './pages/Search';
 
 function App() {
   return (
@@ -34,8 +35,16 @@ function App() {
               } 
             />
             
+            <Route 
+              path="/search" 
+              element={
+                <ProtectedRoute>
+                  <Search />
+                </ProtectedRoute>
+              } 
+            />
+            
             {/* 나중에 추가될 라우트들 */}
-            {/* <Route path="/search" element={<ProtectedRoute><Search /></ProtectedRoute>} /> */}
             {/* <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} /> */}
             
             {/* 404 - 존재하지 않는 경로는 홈으로 리다이렉트 */}

@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './hooks/useAuth.jsx';
 import { WishlistProvider } from './hooks/useWishlist.jsx';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 import ProtectedRoute from './components/ProtectedRoute';
 import SignIn from './pages/SignIn';
 import Home from './pages/Home';
@@ -57,6 +59,7 @@ function App() {
             {/* 404 - 존재하지 않는 경로는 홈으로 리다이렉트 */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+          <ToastContainer position="top-right" autoClose={4000} hideProgressBar={false} newestOnTop />
         </BrowserRouter>
       </WishlistProvider>
     </AuthProvider>

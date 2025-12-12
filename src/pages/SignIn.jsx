@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import { toast } from 'react-toastify';
 import { useAuth } from '../hooks/useAuth.jsx';
-import { useToast } from '../components/Toast.jsx';
 
 // 애니메이션 정의
 const fadeIn = keyframes`
@@ -475,7 +475,6 @@ const TERMS_DATA = {
 const SignIn = () => {
   const navigate = useNavigate();
   const { login, register, isLoading } = useAuth();
-  const toast = useToast();
   
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [formData, setFormData] = useState({

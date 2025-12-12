@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { toast } from 'react-toastify';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.jsx';
 
 // 애니메이션 정의
@@ -87,7 +88,8 @@ const InputGroup = styled.div`
 
 const Input = styled.input`
   width: 100%;
-  padding: 16px 20px;
+  padding: 18px 22px;
+  margin-bottom: 10px;
   background: #333;
   border: 1px solid ${props => props.$hasError ? '#e87c03' : 'transparent'};
   border-radius: 4px;
@@ -640,134 +642,149 @@ const SignIn = () => {
         <Title>{isLoginMode ? '로그인' : '회원가입'}</Title>
         
         <Form onSubmit={handleSubmit}>
-          <InputGroup>
-            <Input
-              type="email"
-              name="email"
-              placeholder="이메일 주소"
-              value={formData.email}
-              onChange={handleChange}
-              $hasError={!!errors.email}
-              autoComplete="email"
-            />
-            {errors.email && <ErrorText>{errors.email}</ErrorText>}
-          </InputGroup>
-
-          <InputGroup>
-            <Input
-              type="password"
-              name="password"
-              placeholder="TMDB API Key"
-              value={formData.password}
-              onChange={handleChange}
-              $hasError={!!errors.password}
-              autoComplete={isLoginMode ? 'current-password' : 'new-password'}
-            />
-            {errors.password && <ErrorText>{errors.password}</ErrorText>}
-          </InputGroup>
-
-          {!isLoginMode && (
-            <InputGroup>
-              <Input
-                type="password"
-                name="confirmPassword"
-                placeholder="TMDB API Key 확인"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                $hasError={!!errors.confirmPassword}
-                autoComplete="new-password"
-              />
-              {errors.confirmPassword && <ErrorText>{errors.confirmPassword}</ErrorText>}
-            </InputGroup>
-          )}
-
-          {/* 회원가입 시 약관 동의 */}
-          {!isLoginMode && (
-            <TermsSection $hasError={!!errors.agreements}>
-              <TermsTitle>약관 동의</TermsTitle>
-              
-              {/* 전체 동의 */}
-              <AllAgreeWrapper>
-                <TermsCheckbox
-                  type="checkbox"
-                  id="agreeAll"
-                  checked={agreements.all}
-                  onChange={() => handleAgreementChange('all')}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isLoginMode ? 'login-form' : 'register-form'}
+              initial={{ opacity: 0, y: 12, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.98 }}
+              transition={{ duration: 1, ease: 'easeInOut' }}
+            >
+              <InputGroup>
+                <Input
+                  type="email"
+                  name="email"
+                  placeholder="이메일 주소"
+                  value={formData.email}
+                  onChange={handleChange}
+                  $hasError={!!errors.email}
+                  autoComplete="email"
                 />
-                <AllAgreeLabel htmlFor="agreeAll">
-                  전체 동의하기
-                </AllAgreeLabel>
-              </AllAgreeWrapper>
+                {errors.email && <ErrorText>{errors.email}</ErrorText>}
+              </InputGroup>
 
-              {/* 이용약관 */}
-              <TermsCheckboxWrapper>
-                <TermsCheckbox
-                  type="checkbox"
-                  id="agreeTerms"
-                  checked={agreements.terms}
-                  onChange={() => handleAgreementChange('terms')}
+              <InputGroup>
+                <Input
+                  type="password"
+                  name="password"
+                  placeholder="TMDB API Key"
+                  value={formData.password}
+                  onChange={handleChange}
+                  $hasError={!!errors.password}
+                  autoComplete={isLoginMode ? 'current-password' : 'new-password'}
                 />
-                <TermsLabel htmlFor="agreeTerms">
-                  이용약관 동의
-                  <RequiredBadge>(필수)</RequiredBadge>
-                  <ViewTermsButton type="button" onClick={() => openTermsModal('terms')}>
-                    보기
-                  </ViewTermsButton>
-                </TermsLabel>
-              </TermsCheckboxWrapper>
+                {errors.password && <ErrorText>{errors.password}</ErrorText>}
+              </InputGroup>
 
-              {/* 개인정보 처리방침 */}
-              <TermsCheckboxWrapper>
-                <TermsCheckbox
-                  type="checkbox"
-                  id="agreePrivacy"
-                  checked={agreements.privacy}
-                  onChange={() => handleAgreementChange('privacy')}
-                />
-                <TermsLabel htmlFor="agreePrivacy">
-                  개인정보 처리방침 동의
-                  <RequiredBadge>(필수)</RequiredBadge>
-                  <ViewTermsButton type="button" onClick={() => openTermsModal('privacy')}>
-                    보기
-                  </ViewTermsButton>
-                </TermsLabel>
-              </TermsCheckboxWrapper>
+              {!isLoginMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 1, ease: 'easeInOut' }}
+                >
+                  <InputGroup>
+                    <Input
+                      type="password"
+                      name="confirmPassword"
+                      placeholder="TMDB API Key 확인"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      $hasError={!!errors.confirmPassword}
+                      autoComplete="new-password"
+                    />
+                    {errors.confirmPassword && <ErrorText>{errors.confirmPassword}</ErrorText>}
+                  </InputGroup>
 
-              {/* 만 14세 이상 */}
-              <TermsCheckboxWrapper>
-                <TermsCheckbox
-                  type="checkbox"
-                  id="agreeAge"
-                  checked={agreements.age}
-                  onChange={() => handleAgreementChange('age')}
-                />
-                <TermsLabel htmlFor="agreeAge">
-                  만 14세 이상입니다
-                  <RequiredBadge>(필수)</RequiredBadge>
-                </TermsLabel>
-              </TermsCheckboxWrapper>
+                  {/* 회원가입 시 약관 동의 */}
+                  <TermsSection $hasError={!!errors.agreements}>
+                    <TermsTitle>약관 동의</TermsTitle>
+                    
+                    {/* 전체 동의 */}
+                    <AllAgreeWrapper>
+                      <TermsCheckbox
+                        type="checkbox"
+                        id="agreeAll"
+                        checked={agreements.all}
+                        onChange={() => handleAgreementChange('all')}
+                      />
+                      <AllAgreeLabel htmlFor="agreeAll">
+                        전체 동의하기
+                      </AllAgreeLabel>
+                    </AllAgreeWrapper>
 
-              {errors.agreements && <ErrorText>{errors.agreements}</ErrorText>}
-            </TermsSection>
-          )}
+                    {/* 이용약관 */}
+                    <TermsCheckboxWrapper>
+                      <TermsCheckbox
+                        type="checkbox"
+                        id="agreeTerms"
+                        checked={agreements.terms}
+                        onChange={() => handleAgreementChange('terms')}
+                      />
+                      <TermsLabel htmlFor="agreeTerms">
+                        이용약관 동의
+                        <RequiredBadge>(필수)</RequiredBadge>
+                        <ViewTermsButton type="button" onClick={() => openTermsModal('terms')}>
+                          보기
+                        </ViewTermsButton>
+                      </TermsLabel>
+                    </TermsCheckboxWrapper>
 
-          {submitError && <ErrorText>{submitError}</ErrorText>}
+                    {/* 개인정보 처리방침 */}
+                    <TermsCheckboxWrapper>
+                      <TermsCheckbox
+                        type="checkbox"
+                        id="agreePrivacy"
+                        checked={agreements.privacy}
+                        onChange={() => handleAgreementChange('privacy')}
+                      />
+                      <TermsLabel htmlFor="agreePrivacy">
+                        개인정보 처리방침 동의
+                        <RequiredBadge>(필수)</RequiredBadge>
+                        <ViewTermsButton type="button" onClick={() => openTermsModal('privacy')}>
+                          보기
+                        </ViewTermsButton>
+                      </TermsLabel>
+                    </TermsCheckboxWrapper>
 
-          {isLoginMode && (
-            <CheckboxWrapper>
-              <Checkbox
-                type="checkbox"
-                id="rememberMe"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-              />
-              <CheckboxLabel htmlFor="rememberMe">로그인 상태 유지</CheckboxLabel>
-            </CheckboxWrapper>
-          )}
+                    {/* 만 14세 이상 */}
+                    <TermsCheckboxWrapper>
+                      <TermsCheckbox
+                        type="checkbox"
+                        id="agreeAge"
+                        checked={agreements.age}
+                        onChange={() => handleAgreementChange('age')}
+                      />
+                      <TermsLabel htmlFor="agreeAge">
+                        만 14세 이상입니다
+                        <RequiredBadge>(필수)</RequiredBadge>
+                      </TermsLabel>
+                    </TermsCheckboxWrapper>
 
-          <SubmitButton type="submit" disabled={isLoading}>
-            {isLoading ? <LoadingSpinner /> : (isLoginMode ? '로그인' : '회원가입')}
-          </SubmitButton>
+                    {errors.agreements && <ErrorText>{errors.agreements}</ErrorText>}
+                  </TermsSection>
+                </motion.div>
+              )}
+
+              {submitError && <ErrorText>{submitError}</ErrorText>}
+
+              {isLoginMode && (
+                <CheckboxWrapper>
+                  <Checkbox
+                    type="checkbox"
+                    id="rememberMe"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                  />
+                  <CheckboxLabel htmlFor="rememberMe">로그인 상태 유지</CheckboxLabel>
+                </CheckboxWrapper>
+              )}
+
+              <SubmitButton type="submit" disabled={isLoading}>
+                {isLoading ? <LoadingSpinner /> : (isLoginMode ? '로그인' : '회원가입')}
+              </SubmitButton>
+            </motion.div>
+          </AnimatePresence>
         </Form>
 
         <SwitchText>

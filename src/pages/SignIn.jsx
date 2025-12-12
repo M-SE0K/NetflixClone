@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { useAuth } from '../hooks/useAuth.jsx';
+import { useToast } from '../components/Toast.jsx';
 
 // 애니메이션 정의
 const fadeIn = keyframes`
@@ -474,6 +475,7 @@ const TERMS_DATA = {
 const SignIn = () => {
   const navigate = useNavigate();
   const { login, register, isLoading } = useAuth();
+  const toast = useToast();
   
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [formData, setFormData] = useState({
@@ -583,8 +585,13 @@ const SignIn = () => {
       const result = await login(formData.email, formData.password, rememberMe);
       
       if (result.success) {
+        toast.success('로그인되었습니다!', {
+          title: '환영합니다 🎉',
+          duration: 3000
+        });
         navigate('/');
       } else {
+        toast.error(result.error);
         setSubmitError(result.error);
       }
     } else {
@@ -596,8 +603,12 @@ const SignIn = () => {
         setIsLoginMode(true);
         setFormData(prev => ({ ...prev, confirmPassword: '' }));
         setAgreements({ all: false, terms: false, privacy: false, age: false });
-        alert('회원가입이 완료되었습니다. 로그인해주세요!');
+        toast.success('회원가입이 완료되었습니다! 로그인해주세요.', {
+          title: '가입 완료 🎊',
+          duration: 5000
+        });
       } else {
+        toast.error(result.error);
         setSubmitError(result.error);
       }
     }

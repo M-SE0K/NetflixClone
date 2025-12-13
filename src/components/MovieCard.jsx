@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import { getImageUrl } from '../api/tmdb';
 import { useWishlist } from '../hooks/useWishlist.jsx';
@@ -166,8 +167,87 @@ const WishlistBadge = styled.div`
   transition: all 0.3s ease;
 `;
 
+// 상세 모달
+const DetailOverlay = styled.div`
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+`;
+
+const DetailContent = styled.div`
+  background: #111;
+  border-radius: 10px;
+  width: min(900px, 95vw);
+  display: grid;
+  grid-template-columns: 1fr 1.2fr;
+  gap: 20px;
+  padding: 20px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const DetailPoster = styled.img`
+  width: 100%;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #222;
+`;
+
+const DetailBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  color: #fff;
+`;
+
+const DetailTitle = styled.h3`
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin: 0;
+`;
+
+const DetailMeta = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #b3b3b3;
+  font-size: 14px;
+`;
+
+const DetailOverview = styled.p`
+  color: #d9d9d9;
+  line-height: 1.6;
+  font-size: 14px;
+  margin: 0;
+`;
+
+const CloseButton = styled.button`
+  align-self: flex-end;
+  padding: 8px 14px;
+  background: #e50914;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 700;
+  transition: background 0.2s;
+
+  &:hover {
+    background: #b20710;
+  }
+`;
+
 const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
   const [imageError, setImageError] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   if (!movie) return null;
@@ -186,6 +266,11 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
     if (onCardClick) {
       onCardClick(movie);
     }
+  };
+
+  const handleInfoClick = (e) => {
+    e.stopPropagation();
+    setShowDetail(true);
   };
 
   return (
@@ -219,10 +304,47 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
             >
               {isWishlisted ? '✓' : '+'}
             </IconButton>
-            <IconButton title="상세 정보">ℹ</IconButton>
+            <IconButton title="상세 정보" onClick={handleInfoClick}>ℹ</IconButton>
           </ButtonGroup>
         </HoverContent>
       </HoverOverlay>
+
+      {/* 상세 모달 */}
+      {showDetail &&
+        createPortal(
+          <DetailOverlay onClick={() => setShowDetail(false)}>
+            <DetailContent onClick={(e) => e.stopPropagation()}>
+              {posterUrl && !imageError ? (
+                <DetailPoster src={posterUrl} alt={movie.title} />
+              ) : (
+                <DetailPoster
+                  as="div"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: '#222',
+                    color: '#888',
+                    fontSize: '40px',
+                  }}
+                >
+                  🎬
+                </DetailPoster>
+              )}
+              <DetailBody>
+                <DetailTitle>{movie.title}</DetailTitle>
+                <DetailMeta>
+                  <span>⭐ {rating}</span>
+                  <span>·</span>
+                  <span>{releaseYear}</span>
+                </DetailMeta>
+                <DetailOverview>{movie.overview || '줄거리 정보가 없습니다.'}</DetailOverview>
+                <CloseButton onClick={() => setShowDetail(false)}>닫기</CloseButton>
+              </DetailBody>
+            </DetailContent>
+          </DetailOverlay>,
+          document.body
+        )}
     </CardContainer>
   );
 };

@@ -309,6 +309,25 @@ const AllAgreeLabel = styled.label`
   cursor: pointer;
 `;
 
+// 비밀번호 토글 버튼
+const ToggleButton = styled.button`
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  color: #b3b3b3;
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+  
+  &:hover {
+    color: #fff;
+  }
+`;
+
 // 약관 모달 스타일
 const ModalOverlay = styled.div`
   position: fixed;
@@ -484,6 +503,8 @@ const SignIn = () => {
     password: '',
     confirmPassword: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
   const [submitError, setSubmitError] = useState('');
@@ -668,7 +689,7 @@ const SignIn = () => {
 
               <InputGroup>
                 <Input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   placeholder="TMDB API Key"
                   value={formData.password}
@@ -676,6 +697,14 @@ const SignIn = () => {
                   $hasError={!!errors.password}
                   autoComplete={isLoginMode ? 'current-password' : 'new-password'}
                 />
+                <ToggleButton
+                  type="button"
+                  onClick={() => setShowPassword((prev) => !prev)}
+                  aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
+                  title={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
+                >
+                  {showPassword ? '🙈' : '👁️'}
+                </ToggleButton>
                 {errors.password && <ErrorText>{errors.password}</ErrorText>}
               </InputGroup>
 
@@ -691,7 +720,7 @@ const SignIn = () => {
                 >
                   <InputGroup>
                     <Input
-                      type="password"
+                      type={showConfirmPassword ? 'text' : 'password'}
                       name="confirmPassword"
                       placeholder="TMDB API Key 확인"
                       value={formData.confirmPassword}
@@ -699,6 +728,14 @@ const SignIn = () => {
                       $hasError={!!errors.confirmPassword}
                       autoComplete="new-password"
                     />
+                    <ToggleButton
+                      type="button"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      aria-label={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
+                      title={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
+                    >
+                      {showConfirmPassword ? '🙈' : '👁️'}
+                    </ToggleButton>
                     {errors.confirmPassword && <ErrorText>{errors.confirmPassword}</ErrorText>}
                   </InputGroup>
 

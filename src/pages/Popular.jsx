@@ -208,6 +208,12 @@ const TopButton = styled.button`
   }
 `;
 
+const LoadMoreWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 10px;
+`;
+
 const spin = keyframes`
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -307,6 +313,7 @@ const Popular = () => {
     hasMore,
     totalResults,
     loadMoreRef,
+    loadMore,
     refresh
   } = useInfiniteScroll(getPopularMovies, {
     initialPage: 1,
@@ -521,6 +528,17 @@ const Popular = () => {
                 onMovieClick={handleMovieClick}
               />
             )}
+            {viewMode === VIEW_MODES.GRID && hasMore && (
+              <LoadMoreWrapper>
+                <PageButton
+                  type="button"
+                  onClick={loadMore}
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore ? '불러오는 중...' : '더 불러오기'}
+                </PageButton>
+              </LoadMoreWrapper>
+            )}
             {viewMode === VIEW_MODES.TABLE && (
               <Pagination>
                 <PageButton
@@ -541,7 +559,7 @@ const Popular = () => {
               </Pagination>
             )}
             {viewMode === VIEW_MODES.GRID && (
-              <TopButton onClick={scrollToTop}>⇧</TopButton>
+              <TopButton onClick={scrollToTop}>Top</TopButton>
             )}
           </>
         )}

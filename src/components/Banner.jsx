@@ -46,7 +46,10 @@ const BackgroundImage = styled.div`
   background-image: url(${props => props.$imageUrl});
   background-size: cover;
   background-position: center top;
-  z-index: -1;
+  z-index: 0;
+  opacity: ${props => (props.$loaded ? 1 : 0)};
+  transition: opacity 0.35s ease;
+  background-color: #0f0f0f;
 
   &::after {
     content: '';
@@ -236,11 +239,18 @@ const Banner = ({ movie }) => {
   const isWishlisted = movie ? isInWishlist(movie.id) : false;
 
   useEffect(() => {
+    let isMounted = true;
+    setImageLoaded(false);
     if (imageUrl) {
       const img = new Image();
       img.src = imageUrl;
-      img.onload = () => setImageLoaded(true);
+      img.onload = () => {
+        if (isMounted) setImageLoaded(true);
+      };
     }
+    return () => {
+      isMounted = false;
+    };
   }, [imageUrl]);
 
   if (!movie) return null;
@@ -250,7 +260,9 @@ const Banner = ({ movie }) => {
 
   return (
     <BannerContainer>
-      {imageLoaded && <BackgroundImage $imageUrl={imageUrl} />}
+      {imageUrl && (
+        <BackgroundImage $imageUrl={imageUrl} $loaded={imageLoaded} />
+      )}
       
       <Content>
         <Title>{movie.title}</Title>

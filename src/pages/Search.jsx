@@ -242,10 +242,11 @@ const SuggestionTitle = styled.h3`
 // 정렬/필터 컨트롤
 const ControlsRow = styled.div`
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 12px;
   align-items: center;
   margin-bottom: 16px;
+  flex-wrap: wrap;
 `;
 
 const ControlLabel = styled.span`
@@ -272,6 +273,28 @@ const SelectSmall = styled.select`
     background: #1a1a1a;
     color: #fff;
   }
+`;
+
+const ResetButton = styled.button`
+  padding: 8px 12px;
+  background: #e50914;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background:rgb(255, 100, 100);
+    border-color:rgb(119, 22, 22);
+  }
+`;
+
+const ControlsGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
 `;
 
 const Search = () => {
@@ -303,6 +326,7 @@ const Search = () => {
     isLoadingMore,
     hasMore,
     totalResults,
+    error,
     loadMoreRef,
     refresh
   } = useInfiniteScroll(fetchMovies, {
@@ -405,7 +429,7 @@ const Search = () => {
     return '영화 검색';
   };
 
-  const showResults = debouncedQuery.trim() || selectedGenres.length;
+  const showResults = !!(debouncedQuery.trim() || selectedGenres.length);
   const showEmptyInitial = !showResults && !isLoading;
 
   return (
@@ -414,7 +438,7 @@ const Search = () => {
       
       <MainContent>
         <SearchSection>
-          <SearchTitle>🔍 영화 검색</SearchTitle>
+          <SearchTitle>영화 검색</SearchTitle>
           
           <SearchForm onSubmit={(e) => e.preventDefault()}>
             <SearchInputWrapper>
@@ -473,44 +497,33 @@ const Search = () => {
           {/* 정렬/필터 컨트롤 */}
           {showResults && (
             <ControlsRow>
-              <ControlLabel>필터 초기화</ControlLabel>
-              <button
-                type="button"
-                onClick={handleResetFilters}
-                style={{
-                  padding: '8px 12px',
-                  background: '#2c2c2c',
-                  color: '#fff',
-                  border: '1px solid rgba(255,255,255,0.15)',
-                  borderRadius: '6px',
-                  cursor: 'pointer'
-                }}
-              >
+              <ControlsGroup>
+                <ControlLabel>정렬</ControlLabel>
+                <SelectSmall value={sortField} onChange={handleSortChange}>
+                  <option value="popularity">인기순</option>
+                  <option value="vote_average">평점순</option>
+                  <option value="release_date">개봉일순</option>
+                  <option value="title">제목순</option>
+                </SelectSmall>
+
+                <ControlLabel>정렬 방향</ControlLabel>
+                <SelectSmall value={sortOrder} onChange={handleOrderChange}>
+                  <option value="desc">내림차순</option>
+                  <option value="asc">오름차순</option>
+                </SelectSmall>
+
+                <ControlLabel>최소 평점</ControlLabel>
+                <SelectSmall value={minRating} onChange={handleMinRatingChange}>
+                  <option value={0}>전체</option>
+                  <option value={6}>6.0+</option>
+                  <option value={7}>7.0+</option>
+                  <option value={8}>8.0+</option>
+                  <option value={8.5}>8.5+</option>
+                </SelectSmall>
+              </ControlsGroup>
+              <ResetButton type="button" onClick={handleResetFilters}>
                 초기화
-              </button>
-
-              <ControlLabel>정렬</ControlLabel>
-              <SelectSmall value={sortField} onChange={handleSortChange}>
-                <option value="popularity">인기순</option>
-                <option value="vote_average">평점순</option>
-                <option value="release_date">개봉일순</option>
-                <option value="title">제목순</option>
-              </SelectSmall>
-
-              <ControlLabel>정렬 방향</ControlLabel>
-              <SelectSmall value={sortOrder} onChange={handleOrderChange}>
-                <option value="desc">내림차순</option>
-                <option value="asc">오름차순</option>
-              </SelectSmall>
-
-              <ControlLabel>최소 평점</ControlLabel>
-              <SelectSmall value={minRating} onChange={handleMinRatingChange}>
-                <option value={0}>전체</option>
-                <option value={6}>6.0+</option>
-                <option value={7}>7.0+</option>
-                <option value={8}>8.0+</option>
-                <option value={8.5}>8.5+</option>
-              </SelectSmall>
+              </ResetButton>
             </ControlsRow>
           )}
 
@@ -534,7 +547,17 @@ const Search = () => {
           )}
 
           {/* 검색 결과 */}
-          {!isLoading && showResults && (
+          {/* 에러 상태 */}
+          {error && (
+            <LoadingContainer>
+              <LoadingText>오류가 발생했습니다: {error}</LoadingText>
+              <ResetButton type="button" onClick={handleResetFilters}>
+                다시 시도
+              </ResetButton>
+            </LoadingContainer>
+          )}
+
+          {!isLoading && showResults && !error && (
             <MovieGrid
               movies={processedMovies}
               isLoading={isLoading}

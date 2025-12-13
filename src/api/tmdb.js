@@ -234,6 +234,7 @@ export default {
   getUpcomingMovies,
   getTrendingMovies,
   getMoviesByGenre,
+  getMoviesByGenres,
   getMovieDetails,
   searchMovies,
   getGenres,

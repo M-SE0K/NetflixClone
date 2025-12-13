@@ -179,26 +179,26 @@ const Home = () => {
         
         <RowsContainer>
           <MovieRow 
-            title="🔥 지금 뜨는 콘텐츠"
+            title="지금 뜨는 콘텐츠"
             movies={movieData.trending}
             isLargeRow
             onMovieClick={handleMovieClick}
           />
           
           <MovieRow 
-            title="🎬 현재 상영 중"
+            title="현재 상영 중"
             movies={movieData.nowPlaying}
             onMovieClick={handleMovieClick}
           />
           
           <MovieRow 
-            title="⭐ 인기 영화"
+            title="인기 영화"
             movies={movieData.popular}
             onMovieClick={handleMovieClick}
           />
           
           <MovieRow 
-            title="🏆 최고 평점"
+            title="최고 평점"
             movies={movieData.topRated}
             isLargeRow
             onMovieClick={handleMovieClick}
@@ -211,32 +211,32 @@ const Home = () => {
           />
           
           <MovieRow 
-            title="💥 액션 영화"
+            title="액션 영화"
             movies={movieData.actionMovies}
             onMovieClick={handleMovieClick}
           />
           
           <MovieRow 
-            title="😂 코미디 영화"
+            title="코미디 영화"
             movies={movieData.comedyMovies}
             onMovieClick={handleMovieClick}
           />
           
           <MovieRow 
-            title="👻 공포 영화"
+            title="공포 영화"
             movies={movieData.horrorMovies}
             onMovieClick={handleMovieClick}
           />
           
           <MovieRow 
-            title="💕 로맨스 영화"
+            title="로맨스 영화"
             movies={movieData.romanceMovies}
             isLargeRow
             onMovieClick={handleMovieClick}
           />
           
           <MovieRow 
-            title="🎓 다큐멘터리"
+            title="다큐멘터리"
             movies={movieData.documentaries}
             onMovieClick={handleMovieClick}
           />

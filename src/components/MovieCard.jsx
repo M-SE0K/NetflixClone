@@ -245,6 +245,33 @@ const CloseButton = styled.button`
   }
 `;
 
+const DetailActions = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
+
+const LinkButton = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #2c2c2c;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 13px;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s;
+
+  &:hover {
+    background: #3a3a3a;
+    border-color: #e50914;
+  }
+`;
+
 const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
   const [imageError, setImageError] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -256,13 +283,21 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
   const isWishlisted = isInWishlist(movie.id);
   const releaseYear = movie.release_date?.split('-')[0] || '';
   const rating = movie.vote_average?.toFixed(1) || 'N/A';
+  const encodedTitle = encodeURIComponent((movie.title || '').trim());
+  // 나무위키 직접 페이지 경로 예: https://namu.wiki/w/주토피아
+  const wikiUrl = `https://namu.wiki/w/${encodedTitle}`;
+  const googleUrl = `https://www.google.com/search?q=${encodedTitle}`;
 
   const handleWishlistClick = (e) => {
     e.stopPropagation();
     toggleWishlist(movie);
   };
 
+  const openDetail = () => setShowDetail(true);
+  const closeDetail = () => setShowDetail(false);
+
   const handleCardClick = () => {
+    openDetail(); // 카드 어디를 눌러도 상세 표시
     if (onCardClick) {
       onCardClick(movie);
     }
@@ -270,7 +305,7 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
 
   const handleInfoClick = (e) => {
     e.stopPropagation();
-    setShowDetail(true);
+    openDetail();
   };
 
   return (
@@ -283,9 +318,22 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
           alt={movie.title}
           loading="lazy"
           onError={() => setImageError(true)}
+          onClick={(e) => {
+            e.stopPropagation();
+            openDetail();
+          }}
+          style={{ cursor: 'pointer' }}
         />
       ) : (
-        <PosterPlaceholder>🎬</PosterPlaceholder>
+        <PosterPlaceholder
+          onClick={(e) => {
+            e.stopPropagation();
+            openDetail();
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          🎬
+        </PosterPlaceholder>
       )}
 
       <HoverOverlay>
@@ -312,7 +360,7 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
       {/* 상세 모달 */}
       {showDetail &&
         createPortal(
-          <DetailOverlay onClick={() => setShowDetail(false)}>
+          <DetailOverlay onClick={closeDetail}>
             <DetailContent onClick={(e) => e.stopPropagation()}>
               {posterUrl && !imageError ? (
                 <DetailPoster src={posterUrl} alt={movie.title} />
@@ -339,7 +387,26 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
                   <span>{releaseYear}</span>
                 </DetailMeta>
                 <DetailOverview>{movie.overview || '줄거리 정보가 없습니다.'}</DetailOverview>
-                <CloseButton onClick={() => setShowDetail(false)}>닫기</CloseButton>
+              <DetailActions>
+                  <LinkButton href={wikiUrl} target="_blank" rel="noopener noreferrer">
+                    나무위키
+                  </LinkButton>
+                  <LinkButton href={googleUrl} target="_blank" rel="noopener noreferrer">
+                    Google
+                  </LinkButton>
+                <IconButton
+                  $isActive={isWishlisted}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleWishlist(movie);
+                  }}
+                  title={isWishlisted ? '내 리스트에서 제거' : '내 리스트에 추가'}
+                  style={{ width: 42, height: 42, fontSize: 14 }}
+                >
+                  {isWishlisted ? '✓' : '+'}
+                </IconButton>
+                <CloseButton onClick={closeDetail}>닫기</CloseButton>
+              </DetailActions>
               </DetailBody>
             </DetailContent>
           </DetailOverlay>,

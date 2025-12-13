@@ -267,7 +267,7 @@ const Banner = ({ movie }) => {
             ▶ 재생
           </PlayButton>
           <InfoButton>
-            ℹ️ 상세 정보
+            상세 정보
           </InfoButton>
           <WishlistButton 
             $isActive={isWishlisted}

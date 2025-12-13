@@ -313,7 +313,7 @@ const Popular = () => {
       
       <MainContent>
         <PageHeader>
-          <PageTitle>🔥 대세 콘텐츠</PageTitle>
+          <PageTitle>대세 콘텐츠</PageTitle>
           <PageDescription>
             지금 가장 인기 있는 영화들을 확인하세요
           </PageDescription>

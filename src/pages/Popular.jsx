@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import Header from '../components/Header';
 import MovieTable from '../components/MovieTable';
@@ -157,6 +157,57 @@ const RefreshButton = styled.button`
   }
 `;
 
+const Pagination = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  color: #fff;
+  flex-wrap: wrap;
+`;
+
+const PageButton = styled.button`
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 72px;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #e50914;
+  }
+`;
+
+const TopButton = styled.button`
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 50%;
+  background: #e50914;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s, background 0.2s;
+  z-index: 50;
+
+  &:hover {
+    transform: translateY(-2px);
+    background: #f40612;
+  }
+`;
+
 const spin = keyframes`
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -239,6 +290,13 @@ const Popular = () => {
   const [viewMode, setViewMode] = useState(VIEW_MODES.GRID);
   const [sortField, setSortField] = useState('popularity');
   const [sortOrder, setSortOrder] = useState('desc');
+  // table 전용 상태
+  const [tablePage, setTablePage] = useState(1);
+  const [tableData, setTableData] = useState([]);
+  const [tableTotalPages, setTableTotalPages] = useState(0);
+  const [tableTotalResults, setTableTotalResults] = useState(0);
+  const [tableLoading, setTableLoading] = useState(false);
+  const [tableError, setTableError] = useState('');
 
   // Infinite Scroll 훅 사용
   const {
@@ -286,6 +344,68 @@ const Popular = () => {
     });
   }, [movies, sortField, sortOrder]);
 
+  // 테이블용 데이터 페치 (페이지네이션)
+  const fetchTablePage = useCallback(async (page) => {
+    try {
+      setTableLoading(true);
+      setTableError('');
+      const res = await getPopularMovies(page);
+      const sorted = [...(res.results || [])].sort((a, b) => {
+        let aVal = a[sortField];
+        let bVal = b[sortField];
+        if (sortField === 'title') {
+          aVal = (aVal || '').toLowerCase();
+          bVal = (bVal || '').toLowerCase();
+          return sortOrder === 'asc' ? aVal.localeCompare(bVal, 'ko') : bVal.localeCompare(aVal, 'ko');
+        }
+        if (sortField === 'release_date') {
+          aVal = new Date(aVal || 0).getTime();
+          bVal = new Date(bVal || 0).getTime();
+        }
+        aVal = aVal || 0;
+        bVal = bVal || 0;
+        return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+      });
+      setTableData(sorted);
+      setTableTotalPages(res.total_pages || 0);
+      setTableTotalResults(res.total_results || 0);
+    } catch (err) {
+      setTableError(err.message || '테이블 데이터를 불러오지 못했습니다.');
+    } finally {
+      setTableLoading(false);
+    }
+  }, [sortField, sortOrder]);
+
+  // 뷰 전환 시 테이블 초기 페이지 로드
+  useEffect(() => {
+    if (viewMode === VIEW_MODES.TABLE) {
+      fetchTablePage(tablePage);
+    }
+  }, [viewMode, tablePage, fetchTablePage]);
+
+  // 정렬 변경 시 테이블도 정렬 다시 적용
+  useEffect(() => {
+    if (viewMode === VIEW_MODES.TABLE && tableData.length) {
+      const resorted = [...tableData].sort((a, b) => {
+        let aVal = a[sortField];
+        let bVal = b[sortField];
+        if (sortField === 'title') {
+          aVal = (aVal || '').toLowerCase();
+          bVal = (bVal || '').toLowerCase();
+          return sortOrder === 'asc' ? aVal.localeCompare(bVal, 'ko') : bVal.localeCompare(aVal, 'ko');
+        }
+        if (sortField === 'release_date') {
+          aVal = new Date(aVal || 0).getTime();
+          bVal = new Date(bVal || 0).getTime();
+        }
+        aVal = aVal || 0;
+        bVal = bVal || 0;
+        return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+      });
+      setTableData(resorted);
+    }
+  }, [sortField, sortOrder, viewMode, tableData]);
+
   // 테이블 정렬 핸들러
   const handleSort = useCallback((field) => {
     if (sortField === field) {
@@ -305,6 +425,10 @@ const Popular = () => {
   const handleMovieClick = (movie) => {
     console.log('Movie clicked:', movie);
     // TODO: 모달 또는 상세 페이지 연결
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -390,12 +514,34 @@ const Popular = () => {
               />
             ) : (
               <MovieTable
-                movies={sortedMovies}
+                movies={tableData}
                 onSort={handleSort}
                 sortField={sortField}
                 sortOrder={sortOrder}
                 onMovieClick={handleMovieClick}
               />
+            )}
+            {viewMode === VIEW_MODES.TABLE && (
+              <Pagination>
+                <PageButton
+                  type="button"
+                  onClick={() => setTablePage((p) => Math.max(1, p - 1))}
+                  disabled={tableLoading || tablePage <= 1}
+                >
+                  이전
+                </PageButton>
+                <span>페이지 {tablePage} / {tableTotalPages || 1}</span>
+                <PageButton
+                  type="button"
+                  onClick={() => setTablePage((p) => (tableTotalPages ? Math.min(tableTotalPages, p + 1) : p + 1))}
+                  disabled={tableLoading || (tableTotalPages ? tablePage >= tableTotalPages : false)}
+                >
+                  다음
+                </PageButton>
+              </Pagination>
+            )}
+            {viewMode === VIEW_MODES.GRID && (
+              <TopButton onClick={scrollToTop}>⇧</TopButton>
             )}
           </>
         )}

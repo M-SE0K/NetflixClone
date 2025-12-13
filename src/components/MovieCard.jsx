@@ -245,6 +245,13 @@ const CloseButton = styled.button`
   }
 `;
 
+const DetailActions = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+`;
+
 const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
   const [imageError, setImageError] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
@@ -356,7 +363,20 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
                   <span>{releaseYear}</span>
                 </DetailMeta>
                 <DetailOverview>{movie.overview || '줄거리 정보가 없습니다.'}</DetailOverview>
+              <DetailActions>
+                <IconButton
+                  $isActive={isWishlisted}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleWishlist(movie);
+                  }}
+                  title={isWishlisted ? '내 리스트에서 제거' : '내 리스트에 추가'}
+                  style={{ width: 42, height: 42, fontSize: 14 }}
+                >
+                  {isWishlisted ? '✓' : '+'}
+                </IconButton>
                 <CloseButton onClick={closeDetail}>닫기</CloseButton>
+              </DetailActions>
               </DetailBody>
             </DetailContent>
           </DetailOverlay>,

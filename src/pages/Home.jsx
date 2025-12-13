@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import Header from '../components/Header';
 import Banner from '../components/Banner';
@@ -114,7 +114,7 @@ const RetryButton = styled.button`
 
 const Home = () => {
   const [movieData, setMovieData] = useState(null);
-  const [bannerMovie, setBannerMovie] = useState(null);
+  const [bannerIndex, setBannerIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -125,12 +125,7 @@ const Home = () => {
     try {
       const data = await getHomePageData();
       setMovieData(data);
-      
-      // 트렌딩 영화 중 하나를 배너로 선택
-      if (data.trending && data.trending.length > 0) {
-        const randomIndex = Math.floor(Math.random() * Math.min(5, data.trending.length));
-        setBannerMovie(data.trending[randomIndex]);
-      }
+      setBannerIndex(0);
     } catch (err) {
       console.error('Failed to fetch home page data:', err);
       setError('영화 데이터를 불러오는데 실패했습니다.');
@@ -138,6 +133,22 @@ const Home = () => {
       setIsLoading(false);
     }
   };
+
+  const bannerCandidates = useMemo(() => {
+    if (!movieData || !movieData.trending) return [];
+    return movieData.trending.slice(0, 5);
+  }, [movieData]);
+
+  // 10초 자동 슬라이드 (수동 조작 없음)
+  useEffect(() => {
+    if (!bannerCandidates.length) return;
+    const interval = setInterval(() => {
+      setBannerIndex((idx) => (idx + 1) % bannerCandidates.length);
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [bannerCandidates]);
+
+  const bannerMovie = bannerCandidates[bannerIndex];
 
   useEffect(() => {
     fetchData();

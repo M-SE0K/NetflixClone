@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
+import { AnimatePresence, motion } from 'framer-motion';
 import { getImageUrl } from '../api/tmdb';
 import { useWishlist } from '../hooks/useWishlist.jsx';
 
@@ -37,7 +38,7 @@ const BannerContainer = styled.div`
   }
 `;
 
-const BackgroundImage = styled.div`
+const BackgroundImage = styled(motion.div)`
   position: absolute;
   top: 0;
   left: 0;
@@ -46,7 +47,10 @@ const BackgroundImage = styled.div`
   background-image: url(${props => props.$imageUrl});
   background-size: cover;
   background-position: center top;
-  z-index: -1;
+  z-index: 0;
+  opacity: ${props => (props.$loaded ? 1 : 0)};
+  transition: opacity 0.35s ease;
+  background-color: #0f0f0f;
 
   &::after {
     content: '';
@@ -85,7 +89,7 @@ const BackgroundImage = styled.div`
   }
 `;
 
-const Content = styled.div`
+const Content = styled(motion.div)`
   padding: 0 4%;
   max-width: 600px;
   z-index: 1;
@@ -236,11 +240,18 @@ const Banner = ({ movie }) => {
   const isWishlisted = movie ? isInWishlist(movie.id) : false;
 
   useEffect(() => {
+    let isMounted = true;
+    setImageLoaded(false);
     if (imageUrl) {
       const img = new Image();
       img.src = imageUrl;
-      img.onload = () => setImageLoaded(true);
+      img.onload = () => {
+        if (isMounted) setImageLoaded(true);
+      };
     }
+    return () => {
+      isMounted = false;
+    };
   }, [imageUrl]);
 
   if (!movie) return null;
@@ -250,34 +261,64 @@ const Banner = ({ movie }) => {
 
   return (
     <BannerContainer>
-      {imageLoaded && <BackgroundImage $imageUrl={imageUrl} />}
+      <AnimatePresence mode="wait">
+        {imageUrl && imageLoaded && (
+          <BackgroundImage
+            key={movie.id || imageUrl}
+            $imageUrl={imageUrl}
+            $loaded={imageLoaded}
+            variants={{
+              initial: { opacity: 0, x: 50 },
+              animate: { opacity: 1, x: 0 },
+              exit: { opacity: 0, x: -50 }
+            }}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            transition={{ duration: 0.7, ease: [0.4, 0, 0.2, 1] }}
+          />
+        )}
+      </AnimatePresence>
       
-      <Content>
-        <Title>{movie.title}</Title>
-        
-        <Info>
-          <Rating>⭐ {rating}</Rating>
-          <Year>{releaseYear}</Year>
-        </Info>
+      <AnimatePresence mode="wait">
+        <Content
+          key={movie.id || imageUrl}
+          variants={{
+            initial: { opacity: 0, x: 35 },
+            animate: { opacity: 1, x: 0 },
+            exit: { opacity: 0, x: -35 }
+          }}
+          initial="initial"
+          animate="animate"
+          exit="exit"
+          transition={{ duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+        >
+          <Title>{movie.title}</Title>
+          
+          <Info>
+            <Rating>⭐ {rating}</Rating>
+            <Year>{releaseYear}</Year>
+          </Info>
 
-        <Overview>{movie.overview || '줄거리 정보가 없습니다.'}</Overview>
+          <Overview>{movie.overview || '줄거리 정보가 없습니다.'}</Overview>
 
-        <ButtonGroup>
-          <PlayButton>
-            ▶ 재생
-          </PlayButton>
-          <InfoButton>
-            상세 정보
-          </InfoButton>
-          <WishlistButton 
-            $isActive={isWishlisted}
-            onClick={() => toggleWishlist(movie)}
-            title={isWishlisted ? '내 리스트에서 제거' : '내 리스트에 추가'}
-          >
-            {isWishlisted ? '✓' : '+'}
-          </WishlistButton>
-        </ButtonGroup>
-      </Content>
+          <ButtonGroup>
+            <PlayButton>
+              ▶ 재생
+            </PlayButton>
+            <InfoButton>
+              상세 정보
+            </InfoButton>
+            <WishlistButton 
+              $isActive={isWishlisted}
+              onClick={() => toggleWishlist(movie)}
+              title={isWishlisted ? '내 리스트에서 제거' : '내 리스트에 추가'}
+            >
+              {isWishlisted ? '✓' : '+'}
+            </WishlistButton>
+          </ButtonGroup>
+        </Content>
+      </AnimatePresence>
     </BannerContainer>
   );
 };

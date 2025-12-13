@@ -1,10 +1,10 @@
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import Header from '../components/Header';
 import MovieTable from '../components/MovieTable';
 import MovieGrid from '../components/MovieGrid';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
-import { getPopularMovies } from '../api/tmdb';
+import { getPopularMovies, getPopularMoviesSorted } from '../api/tmdb';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -73,6 +73,7 @@ const RightControls = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 `;
 
 const ViewToggle = styled.div`
@@ -157,6 +158,63 @@ const RefreshButton = styled.button`
   }
 `;
 
+const Pagination = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  color: #fff;
+  flex-wrap: wrap;
+`;
+
+const PageButton = styled.button`
+  padding: 8px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-width: 72px;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &:hover:not(:disabled) {
+    background: #e50914;
+    border-color: #e50914;
+  }
+`;
+
+const TopButton = styled.button`
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 50%;
+  background: #e50914;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s, background 0.2s;
+  z-index: 50;
+
+  &:hover {
+    transform: translateY(-2px);
+    background: #f40612;
+  }
+`;
+
+const LoadMoreWrapper = styled.div`
+  display: flex;
+  justify-content: center;
+  padding: 20px 0 10px;
+`;
+
 const spin = keyframes`
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -235,10 +293,25 @@ const SORT_OPTIONS = [
   { value: 'title', label: '제목순' }
 ];
 
+const ORIGIN_OPTIONS = [
+  { value: 'all', label: '전체' },
+  { value: 'kr', label: '한국만' },
+  { value: 'foreign', label: '해외만' }
+];
+
 const Popular = () => {
   const [viewMode, setViewMode] = useState(VIEW_MODES.GRID);
   const [sortField, setSortField] = useState('popularity');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [originFilter, setOriginFilter] = useState('all');
+  // table 전용 상태
+  const [tablePageSize, setTablePageSize] = useState(8);
+  const [tablePage, setTablePage] = useState(1);
+  const [tableData, setTableData] = useState([]);
+  const [tableTotalPages, setTableTotalPages] = useState(0);
+  const [tableTotalResults, setTableTotalResults] = useState(0);
+  const [tableLoading, setTableLoading] = useState(false);
+  const [tableError, setTableError] = useState('');
 
   // Infinite Scroll 훅 사용
   const {
@@ -249,6 +322,7 @@ const Popular = () => {
     hasMore,
     totalResults,
     loadMoreRef,
+    loadMore,
     refresh
   } = useInfiniteScroll(getPopularMovies, {
     initialPage: 1,
@@ -286,6 +360,60 @@ const Popular = () => {
     });
   }, [movies, sortField, sortOrder]);
 
+  // 테이블용 데이터 페치 (페이지네이션)
+  const fetchTablePage = useCallback(async (page, pageSize = tablePageSize, sortF = sortField, sortO = sortOrder, origin = originFilter) => {
+    try {
+      setTableLoading(true);
+      setTableError('');
+      // 서버 정렬된 페이지를 받아 화면 크기에 맞춰 자름
+      const res = await getPopularMoviesSorted(page, sortF, sortO, origin);
+      const slice = (res.results || []).slice(0, pageSize);
+      setTableData(slice);
+      setTableTotalPages(res.total_pages || 0);
+      setTableTotalResults(res.total_results || 0);
+    } catch (err) {
+      setTableError(err.message || '테이블 데이터를 불러오지 못했습니다.');
+    } finally {
+      setTableLoading(false);
+    }
+  }, [sortField, sortOrder, originFilter, tablePageSize]);
+
+  // 뷰 전환 시 테이블 초기 페이지 로드 및 페이지 리셋
+  useEffect(() => {
+    if (viewMode === VIEW_MODES.TABLE) {
+      setTablePage(1);
+    }
+  }, [viewMode]);
+
+  // 테이블 페이지/사이즈/정렬 변경 시 데이터 로드
+  useEffect(() => {
+    if (viewMode === VIEW_MODES.TABLE) {
+      fetchTablePage(tablePage, tablePageSize, sortField, sortOrder, originFilter);
+    }
+  }, [viewMode, tablePage, tablePageSize, sortField, sortOrder, originFilter, fetchTablePage]);
+
+  // 정렬 변경 시 테이블도 정렬 다시 적용 (무한 루프 방지: tableData 비포함)
+  useEffect(() => {
+    if (viewMode === VIEW_MODES.TABLE) {
+      fetchTablePage(tablePage, tablePageSize, sortField, sortOrder, originFilter);
+    }
+  }, [sortField, sortOrder, viewMode, tablePage, tablePageSize, originFilter, fetchTablePage]);
+
+  // 화면 높이에 맞춰 테이블 페이지 크기 자동 조절 (스크롤 불가 목표)
+  useEffect(() => {
+    const calcPageSize = () => {
+      const viewportH = window.innerHeight || 900;
+      const headerReserve = 320; // 헤더/컨트롤 여유 높이
+      const rowHeight = 92; // 행 높이 추정 (포스터 68 + 패딩 등)
+      const available = Math.max(200, viewportH - headerReserve);
+      const size = Math.max(5, Math.min(12, Math.floor(available / rowHeight)));
+      setTablePageSize(size);
+    };
+    calcPageSize();
+    window.addEventListener('resize', calcPageSize);
+    return () => window.removeEventListener('resize', calcPageSize);
+  }, []);
+
   // 테이블 정렬 핸들러
   const handleSort = useCallback((field) => {
     if (sortField === field) {
@@ -294,17 +422,34 @@ const Popular = () => {
       setSortField(field);
       setSortOrder('desc');
     }
-  }, [sortField]);
+    // 테이블 뷰일 때는 정렬 변경 시 1페이지로 이동
+    if (viewMode === VIEW_MODES.TABLE) {
+      setTablePage(1);
+    }
+  }, [sortField, viewMode]);
 
   // 드롭다운 정렬 변경
   const handleSortChange = (e) => {
     setSortField(e.target.value);
     setSortOrder('desc');
+    if (viewMode === VIEW_MODES.TABLE) {
+      setTablePage(1);
+    }
+  };
+
+  const handleOriginChange = (e) => {
+    const value = e.target.value;
+    setOriginFilter(value);
+    setTablePage(1);
   };
 
   const handleMovieClick = (movie) => {
     console.log('Movie clicked:', movie);
     // TODO: 모달 또는 상세 페이지 연결
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -344,8 +489,16 @@ const Popular = () => {
               ))}
             </Select>
 
+            <Select value={originFilter} onChange={handleOriginChange}>
+              {ORIGIN_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+
             <RefreshButton onClick={refresh} disabled={isLoading}>
-              🔄 새로고침
+              새로고침
             </RefreshButton>
           </LeftControls>
 
@@ -390,12 +543,53 @@ const Popular = () => {
               />
             ) : (
               <MovieTable
-                movies={sortedMovies}
+                movies={tableData}
                 onSort={handleSort}
                 sortField={sortField}
                 sortOrder={sortOrder}
                 onMovieClick={handleMovieClick}
               />
+            )}
+            {viewMode === VIEW_MODES.GRID && hasMore && (
+              <LoadMoreWrapper>
+                <PageButton
+                  type="button"
+                  onClick={loadMore}
+                  disabled={isLoadingMore}
+                >
+                  {isLoadingMore ? '불러오는 중...' : '더 불러오기'}
+                </PageButton>
+              </LoadMoreWrapper>
+            )}
+            {viewMode === VIEW_MODES.TABLE && tableError && (
+              <LoadingContainer>
+                <LoadingText>{tableError}</LoadingText>
+                <PageButton onClick={() => fetchTablePage(tablePage, tablePageSize)} disabled={tableLoading}>
+                  다시 시도
+                </PageButton>
+              </LoadingContainer>
+            )}
+            {viewMode === VIEW_MODES.TABLE && (
+              <Pagination>
+                <PageButton
+                  type="button"
+                  onClick={() => setTablePage((p) => Math.max(1, p - 1))}
+                  disabled={tableLoading || tablePage <= 1}
+                >
+                  이전
+                </PageButton>
+                <span>페이지 {tablePage} / {tableTotalPages || 1}</span>
+                <PageButton
+                  type="button"
+                  onClick={() => setTablePage((p) => (tableTotalPages ? Math.min(tableTotalPages, p + 1) : p + 1))}
+                  disabled={tableLoading || (tableTotalPages ? tablePage >= tableTotalPages : false)}
+                >
+                  다음
+                </PageButton>
+              </Pagination>
+            )}
+            {viewMode === VIEW_MODES.GRID && (
+              <TopButton onClick={scrollToTop}>Top</TopButton>
             )}
           </>
         )}

@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import MovieGrid from '../components/MovieGrid';
 import useDebounce from '../hooks/useDebounce';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
-import { searchMovies, getGenres, getMoviesByGenre, getMoviesByGenres } from '../api/tmdb';
+import { searchMovies, getGenres, getMoviesByGenre, getMoviesByGenres, GENRE_IDS } from '../api/tmdb';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -174,6 +174,17 @@ const ResultsCount = styled.p`
   }
 `;
 
+const PresetBadge = styled.span`
+  display: inline-block;
+  padding: 6px 10px;
+  margin-top: 6px;
+  background: rgba(229, 9, 20, 0.12);
+  color: #ff6b6b;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+`;
+
 const spin = keyframes`
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -305,9 +316,32 @@ const Search = () => {
   const [sortField, setSortField] = useState('popularity');
   const [sortOrder, setSortOrder] = useState('desc');
   const [minRating, setMinRating] = useState(0);
+  const [presetLabel, setPresetLabel] = useState('');
 
   // Debounce 적용 (500ms)
   const debouncedQuery = useDebounce(searchQuery, 500);
+
+  // 요일별 추천 장르 프리셋
+  const weekdayPreset = useMemo(() => {
+    const day = new Date().getDay(); // 0:Sun ... 6:Sat
+    switch (day) {
+      case 1: // Mon
+        return { label: '무료한 월요일은 액션!', genres: [GENRE_IDS.ACTION] };
+      case 2: // Tue
+        return { label: '화요일엔 코미디!', genres: [GENRE_IDS.COMEDY] };
+      case 3: // Wed
+        return { label: '수요일엔 미스터리/스릴러', genres: [GENRE_IDS.MYSTERY, GENRE_IDS.THRILLER] };
+      case 4: // Thu
+        return { label: '목요일엔 SF', genres: [GENRE_IDS.SCIENCE_FICTION] };
+      case 5: // Fri
+        return { label: '불금에는 로맨스!', genres: [GENRE_IDS.ROMANCE] };
+      case 6: // Sat
+        return { label: '토요일엔 가족/애니메이션', genres: [GENRE_IDS.FAMILY, GENRE_IDS.ANIMATION] };
+      case 0: // Sun
+      default:
+        return { label: '일요일엔 다큐/드라마', genres: [GENRE_IDS.DOCUMENTARY, GENRE_IDS.DRAMA] };
+    }
+  }, []);
 
   // 검색 또는 장르별 영화 가져오기 함수
   const fetchMovies = useCallback(async (page) => {
@@ -349,6 +383,14 @@ const Search = () => {
     fetchGenres();
   }, []);
 
+  // 초기 렌더 시 요일별 추천 장르 적용 (검색어가 비어 있을 때만)
+  useEffect(() => {
+    if (!searchQuery.trim() && weekdayPreset.genres.length) {
+      setSelectedGenres(weekdayPreset.genres);
+      setPresetLabel(weekdayPreset.label);
+    }
+  }, [searchQuery, weekdayPreset]);
+
   // 검색어 또는 장르 변경 시 새로고침
   useEffect(() => {
     if (debouncedQuery.trim() || selectedGenres.length) {
@@ -383,6 +425,7 @@ const Search = () => {
     setSortField('popularity');
     setSortOrder('desc');
     setMinRating(0);
+    setPresetLabel('');
     refresh();
   };
 
@@ -485,6 +528,9 @@ const Search = () => {
             <ResultsHeader>
               <ResultsTitle>
                 {getResultTitle()}
+                {presetLabel && (
+                  <PresetBadge>{presetLabel}</PresetBadge>
+                )}
               </ResultsTitle>
               {totalResults > 0 && (
                 <ResultsCount>

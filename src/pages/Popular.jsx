@@ -297,6 +297,7 @@ const Popular = () => {
   const [sortField, setSortField] = useState('popularity');
   const [sortOrder, setSortOrder] = useState('desc');
   // table 전용 상태
+  const [tablePageSize, setTablePageSize] = useState(8);
   const [tablePage, setTablePage] = useState(1);
   const [tableData, setTableData] = useState([]);
   const [tableTotalPages, setTableTotalPages] = useState(0);
@@ -352,12 +353,26 @@ const Popular = () => {
   }, [movies, sortField, sortOrder]);
 
   // 테이블용 데이터 페치 (페이지네이션)
-  const fetchTablePage = useCallback(async (page) => {
+  const fetchTablePage = useCallback(async (page, pageSize = tablePageSize) => {
     try {
       setTableLoading(true);
       setTableError('');
-      const res = await getPopularMovies(page);
-      const sorted = [...(res.results || [])].sort((a, b) => {
+      const startIndex = (page - 1) * pageSize;
+      const firstApiPage = Math.floor(startIndex / 20) + 1; // TMDB 기본 20개씩
+      const offsetInFirst = startIndex % 20;
+
+      const firstRes = await getPopularMovies(firstApiPage);
+      let combined = firstRes.results || [];
+
+      // 필요한 개수가 첫 페이지 남은 슬롯보다 크면 다음 페이지도 가져옴
+      if (offsetInFirst + pageSize > combined.length) {
+        const secondRes = await getPopularMovies(firstApiPage + 1);
+        combined = combined.concat(secondRes.results || []);
+      }
+
+      const slice = combined.slice(offsetInFirst, offsetInFirst + pageSize);
+
+      const sorted = [...slice].sort((a, b) => {
         let aVal = a[sortField];
         let bVal = b[sortField];
         if (sortField === 'title') {
@@ -374,21 +389,22 @@ const Popular = () => {
         return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
       });
       setTableData(sorted);
-      setTableTotalPages(res.total_pages || 0);
-      setTableTotalResults(res.total_results || 0);
+      const totalResults = firstRes.total_results || 0;
+      setTableTotalPages(pageSize ? Math.ceil(totalResults / pageSize) : 0);
+      setTableTotalResults(totalResults);
     } catch (err) {
       setTableError(err.message || '테이블 데이터를 불러오지 못했습니다.');
     } finally {
       setTableLoading(false);
     }
-  }, [sortField, sortOrder]);
+  }, [sortField, sortOrder, tablePageSize]);
 
   // 뷰 전환 시 테이블 초기 페이지 로드
   useEffect(() => {
     if (viewMode === VIEW_MODES.TABLE) {
-      fetchTablePage(tablePage);
+      fetchTablePage(tablePage, tablePageSize);
     }
-  }, [viewMode, tablePage, fetchTablePage]);
+  }, [viewMode, tablePage, tablePageSize, fetchTablePage]);
 
   // 정렬 변경 시 테이블도 정렬 다시 적용
   useEffect(() => {
@@ -412,6 +428,21 @@ const Popular = () => {
       setTableData(resorted);
     }
   }, [sortField, sortOrder, viewMode, tableData]);
+
+  // 화면 높이에 맞춰 테이블 페이지 크기 자동 조절 (스크롤 불가 목표)
+  useEffect(() => {
+    const calcPageSize = () => {
+      const viewportH = window.innerHeight || 900;
+      const headerReserve = 320; // 헤더/컨트롤 여유 높이
+      const rowHeight = 92; // 행 높이 추정 (포스터 68 + 패딩 등)
+      const available = Math.max(200, viewportH - headerReserve);
+      const size = Math.max(5, Math.min(12, Math.floor(available / rowHeight)));
+      setTablePageSize(size);
+    };
+    calcPageSize();
+    window.addEventListener('resize', calcPageSize);
+    return () => window.removeEventListener('resize', calcPageSize);
+  }, []);
 
   // 테이블 정렬 핸들러
   const handleSort = useCallback((field) => {

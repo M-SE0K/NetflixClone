@@ -357,20 +357,9 @@ const Popular = () => {
     try {
       setTableLoading(true);
       setTableError('');
-      const startIndex = (page - 1) * pageSize;
-      const firstApiPage = Math.floor(startIndex / 20) + 1; // TMDB 기본 20개씩
-      const offsetInFirst = startIndex % 20;
-
-      const firstRes = await getPopularMovies(firstApiPage);
-      let combined = firstRes.results || [];
-
-      // 필요한 개수가 첫 페이지 남은 슬롯보다 크면 다음 페이지도 가져옴
-      if (offsetInFirst + pageSize > combined.length) {
-        const secondRes = await getPopularMovies(firstApiPage + 1);
-        combined = combined.concat(secondRes.results || []);
-      }
-
-      const slice = combined.slice(offsetInFirst, offsetInFirst + pageSize);
+      // 테이블 페이지는 TMDB 페이지 단위로 불러오고 화면에 맞춰 자름
+      const res = await getPopularMovies(page);
+      const slice = (res.results || []).slice(0, pageSize);
 
       const sorted = [...slice].sort((a, b) => {
         let aVal = a[sortField];
@@ -389,9 +378,8 @@ const Popular = () => {
         return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
       });
       setTableData(sorted);
-      const totalResults = firstRes.total_results || 0;
-      setTableTotalPages(pageSize ? Math.ceil(totalResults / pageSize) : 0);
-      setTableTotalResults(totalResults);
+      setTableTotalPages(res.total_pages || 0);
+      setTableTotalResults(res.total_results || 0);
     } catch (err) {
       setTableError(err.message || '테이블 데이터를 불러오지 못했습니다.');
     } finally {
@@ -399,35 +387,45 @@ const Popular = () => {
     }
   }, [sortField, sortOrder, tablePageSize]);
 
-  // 뷰 전환 시 테이블 초기 페이지 로드
+  // 뷰 전환 시 테이블 초기 페이지 로드 및 페이지 리셋
+  useEffect(() => {
+    if (viewMode === VIEW_MODES.TABLE) {
+      setTablePage(1);
+    }
+  }, [viewMode]);
+
+  // 테이블 페이지/사이즈/정렬 변경 시 데이터 로드
   useEffect(() => {
     if (viewMode === VIEW_MODES.TABLE) {
       fetchTablePage(tablePage, tablePageSize);
     }
-  }, [viewMode, tablePage, tablePageSize, fetchTablePage]);
+  }, [viewMode, tablePage, tablePageSize, sortField, sortOrder, fetchTablePage]);
 
-  // 정렬 변경 시 테이블도 정렬 다시 적용
+  // 정렬 변경 시 테이블도 정렬 다시 적용 (무한 루프 방지: tableData 비포함)
   useEffect(() => {
-    if (viewMode === VIEW_MODES.TABLE && tableData.length) {
-      const resorted = [...tableData].sort((a, b) => {
-        let aVal = a[sortField];
-        let bVal = b[sortField];
-        if (sortField === 'title') {
-          aVal = (aVal || '').toLowerCase();
-          bVal = (bVal || '').toLowerCase();
-          return sortOrder === 'asc' ? aVal.localeCompare(bVal, 'ko') : bVal.localeCompare(aVal, 'ko');
-        }
-        if (sortField === 'release_date') {
-          aVal = new Date(aVal || 0).getTime();
-          bVal = new Date(bVal || 0).getTime();
-        }
-        aVal = aVal || 0;
-        bVal = bVal || 0;
-        return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+    if (viewMode === VIEW_MODES.TABLE) {
+      setTableData((prev) => {
+        if (!prev || !prev.length) return prev;
+        const resorted = [...prev].sort((a, b) => {
+          let aVal = a[sortField];
+          let bVal = b[sortField];
+          if (sortField === 'title') {
+            aVal = (aVal || '').toLowerCase();
+            bVal = (bVal || '').toLowerCase();
+            return sortOrder === 'asc' ? aVal.localeCompare(bVal, 'ko') : bVal.localeCompare(aVal, 'ko');
+          }
+          if (sortField === 'release_date') {
+            aVal = new Date(aVal || 0).getTime();
+            bVal = new Date(bVal || 0).getTime();
+          }
+          aVal = aVal || 0;
+          bVal = bVal || 0;
+          return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+        });
+        return resorted;
       });
-      setTableData(resorted);
     }
-  }, [sortField, sortOrder, viewMode, tableData]);
+  }, [sortField, sortOrder, viewMode]);
 
   // 화면 높이에 맞춰 테이블 페이지 크기 자동 조절 (스크롤 불가 목표)
   useEffect(() => {
@@ -507,7 +505,7 @@ const Popular = () => {
             </Select>
 
             <RefreshButton onClick={refresh} disabled={isLoading}>
-              🔄 새로고침
+              새로고침
             </RefreshButton>
           </LeftControls>
 
@@ -569,6 +567,14 @@ const Popular = () => {
                   {isLoadingMore ? '불러오는 중...' : '더 불러오기'}
                 </PageButton>
               </LoadMoreWrapper>
+            )}
+            {viewMode === VIEW_MODES.TABLE && tableError && (
+              <LoadingContainer>
+                <LoadingText>{tableError}</LoadingText>
+                <PageButton onClick={() => fetchTablePage(tablePage, tablePageSize)} disabled={tableLoading}>
+                  다시 시도
+                </PageButton>
+              </LoadingContainer>
             )}
             {viewMode === VIEW_MODES.TABLE && (
               <Pagination>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import Header from '../components/Header';
 import MovieGrid from '../components/MovieGrid';
@@ -150,6 +150,8 @@ const ResultsHeader = styled.div`
   margin-bottom: 20px;
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+  gap: 12px;
 `;
 
 const ResultsTitle = styled.h2`
@@ -237,11 +239,49 @@ const SuggestionTitle = styled.h3`
   margin-bottom: 16px;
 `;
 
+// 정렬/필터 컨트롤
+const ControlsRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+`;
+
+const ControlLabel = styled.span`
+  color: #b3b3b3;
+  font-size: 13px;
+`;
+
+const SelectSmall = styled.select`
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+
+  &:hover, &:focus {
+    border-color: #e50914;
+  }
+
+  option {
+    background: #1a1a1a;
+    color: #fff;
+  }
+`;
+
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedGenre, setSelectedGenre] = useState(null);
   const [genres, setGenres] = useState([]);
   const [isGenreLoading, setIsGenreLoading] = useState(true);
+  const [sortField, setSortField] = useState('popularity');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [minRating, setMinRating] = useState(0);
 
   // Debounce 적용 (500ms)
   const debouncedQuery = useDebounce(searchQuery, 500);
@@ -312,6 +352,33 @@ const Search = () => {
       setSearchQuery(''); // 장르 선택 시 검색어 초기화
     }
   };
+
+  const handleSortChange = (e) => setSortField(e.target.value);
+  const handleOrderChange = (e) => setSortOrder(e.target.value);
+  const handleMinRatingChange = (e) => setMinRating(Number(e.target.value));
+
+  // 정렬/필터 적용된 목록
+  const processedMovies = useMemo(() => {
+    if (!movies) return [];
+    const filtered = movies.filter((m) => (m.vote_average || 0) >= minRating);
+    const sorted = [...filtered].sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+      if (sortField === 'title') {
+        aVal = (aVal || '').toLowerCase();
+        bVal = (bVal || '').toLowerCase();
+        return sortOrder === 'asc' ? aVal.localeCompare(bVal, 'ko') : bVal.localeCompare(aVal, 'ko');
+      }
+      if (sortField === 'release_date') {
+        aVal = new Date(aVal || 0).getTime();
+        bVal = new Date(bVal || 0).getTime();
+      }
+      aVal = aVal || 0;
+      bVal = bVal || 0;
+      return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+    return sorted;
+  }, [movies, minRating, sortField, sortOrder]);
 
   const handleMovieClick = (movie) => {
     console.log('Movie clicked:', movie);
@@ -394,6 +461,34 @@ const Search = () => {
             </ResultsHeader>
           )}
 
+          {/* 정렬/필터 컨트롤 */}
+          {showResults && (
+            <ControlsRow>
+              <ControlLabel>정렬</ControlLabel>
+              <SelectSmall value={sortField} onChange={handleSortChange}>
+                <option value="popularity">인기순</option>
+                <option value="vote_average">평점순</option>
+                <option value="release_date">개봉일순</option>
+                <option value="title">제목순</option>
+              </SelectSmall>
+
+              <ControlLabel>정렬 방향</ControlLabel>
+              <SelectSmall value={sortOrder} onChange={handleOrderChange}>
+                <option value="desc">내림차순</option>
+                <option value="asc">오름차순</option>
+              </SelectSmall>
+
+              <ControlLabel>최소 평점</ControlLabel>
+              <SelectSmall value={minRating} onChange={handleMinRatingChange}>
+                <option value={0}>전체</option>
+                <option value={6}>6.0+</option>
+                <option value={7}>7.0+</option>
+                <option value={8}>8.0+</option>
+                <option value={8.5}>8.5+</option>
+              </SelectSmall>
+            </ControlsRow>
+          )}
+
           {/* 초기 상태 - 검색어/장르 없음 */}
           {showEmptyInitial && (
             <EmptyState>
@@ -416,7 +511,7 @@ const Search = () => {
           {/* 검색 결과 */}
           {!isLoading && showResults && (
             <MovieGrid
-              movies={movies}
+              movies={processedMovies}
               isLoading={isLoading}
               isLoadingMore={isLoadingMore}
               hasMore={hasMore}

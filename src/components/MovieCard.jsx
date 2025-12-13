@@ -247,9 +247,29 @@ const CloseButton = styled.button`
 
 const DetailActions = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-wrap: wrap;
+`;
+
+const LinkButton = styled.a`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #2c2c2c;
+  color: #fff;
+  border-radius: 4px;
+  font-size: 13px;
+  text-decoration: none;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s;
+
+  &:hover {
+    background: #3a3a3a;
+    border-color: #e50914;
+  }
 `;
 
 const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
@@ -263,6 +283,10 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
   const isWishlisted = isInWishlist(movie.id);
   const releaseYear = movie.release_date?.split('-')[0] || '';
   const rating = movie.vote_average?.toFixed(1) || 'N/A';
+  const encodedTitle = encodeURIComponent((movie.title || '').trim());
+  // 나무위키 직접 페이지 경로 예: https://namu.wiki/w/주토피아
+  const wikiUrl = `https://namu.wiki/w/${encodedTitle}`;
+  const googleUrl = `https://www.google.com/search?q=${encodedTitle}`;
 
   const handleWishlistClick = (e) => {
     e.stopPropagation();
@@ -364,6 +388,12 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
                 </DetailMeta>
                 <DetailOverview>{movie.overview || '줄거리 정보가 없습니다.'}</DetailOverview>
               <DetailActions>
+                  <LinkButton href={wikiUrl} target="_blank" rel="noopener noreferrer">
+                    나무위키
+                  </LinkButton>
+                  <LinkButton href={googleUrl} target="_blank" rel="noopener noreferrer">
+                    Google
+                  </LinkButton>
                 <IconButton
                   $isActive={isWishlisted}
                   onClick={(e) => {

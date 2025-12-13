@@ -106,6 +106,19 @@ export const getMoviesByGenre = async (genreId, page = 1) => {
 };
 
 /**
+ * 여러 장르로 영화 목록 가져오기 (쉼표 구분)
+ */
+export const getMoviesByGenres = async (genreIds = [], page = 1) => {
+  const ids = Array.isArray(genreIds) ? genreIds : [genreIds];
+  if (!ids.length) return { results: [], total_pages: 0, total_results: 0 };
+  return fetchFromTMDB('/discover/movie', {
+    with_genres: ids.join(','),
+    sort_by: 'popularity.desc',
+    page
+  });
+};
+
+/**
  * 영화 상세 정보
  */
 export const getMovieDetails = async (movieId) => {
@@ -221,6 +234,7 @@ export default {
   getUpcomingMovies,
   getTrendingMovies,
   getMoviesByGenre,
+  getMoviesByGenres,
   getMovieDetails,
   searchMovies,
   getGenres,

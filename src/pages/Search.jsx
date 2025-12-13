@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
 import Header from '../components/Header';
 import MovieGrid from '../components/MovieGrid';
 import useDebounce from '../hooks/useDebounce';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
-import { searchMovies, getGenres, getMoviesByGenre } from '../api/tmdb';
+import { searchMovies, getGenres, getMoviesByGenre, getMoviesByGenres, GENRE_IDS } from '../api/tmdb';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -150,6 +150,8 @@ const ResultsHeader = styled.div`
   margin-bottom: 20px;
   padding-bottom: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  flex-wrap: wrap;
+  gap: 12px;
 `;
 
 const ResultsTitle = styled.h2`
@@ -237,24 +239,108 @@ const SuggestionTitle = styled.h3`
   margin-bottom: 16px;
 `;
 
+// 정렬/필터 컨트롤
+const ControlsRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+`;
+
+const ControlLabel = styled.span`
+  color: #b3b3b3;
+  font-size: 13px;
+`;
+
+const SelectSmall = styled.select`
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.2s;
+
+  &:hover, &:focus {
+    border-color: #e50914;
+  }
+
+  option {
+    background: #1a1a1a;
+    color: #fff;
+  }
+`;
+
+const ResetButton = styled.button`
+  padding: 8px 12px;
+  background: #e50914;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background:rgb(255, 100, 100);
+    border-color:rgb(119, 22, 22);
+  }
+`;
+
+const ControlsGroup = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+`;
+
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState(null);
+  const [selectedGenres, setSelectedGenres] = useState([]);
   const [genres, setGenres] = useState([]);
   const [isGenreLoading, setIsGenreLoading] = useState(true);
+  const [sortField, setSortField] = useState('popularity');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [minRating, setMinRating] = useState(0);
+  const [presetLabel, setPresetLabel] = useState('');
 
   // Debounce 적용 (500ms)
   const debouncedQuery = useDebounce(searchQuery, 500);
+
+  // 요일별 추천 장르 프리셋
+  const weekdayPreset = useMemo(() => {
+    const day = new Date().getDay(); // 0:Sun ... 6:Sat
+    switch (day) {
+      case 1: // Mon
+        return { label: '무료한 월요일은 액션!', genres: [GENRE_IDS.ACTION] };
+      case 2: // Tue
+        return { label: '화요일엔 코미디!', genres: [GENRE_IDS.COMEDY] };
+      case 3: // Wed
+        return { label: '수요일엔 미스터리/스릴러', genres: [GENRE_IDS.MYSTERY, GENRE_IDS.THRILLER] };
+      case 4: // Thu
+        return { label: '목요일엔 SF', genres: [GENRE_IDS.SCIENCE_FICTION] };
+      case 5: // Fri
+        return { label: '불금에는 로맨스!', genres: [GENRE_IDS.ROMANCE] };
+      case 6: // Sat
+        return { label: '토요일엔 가족/애니메이션', genres: [GENRE_IDS.FAMILY, GENRE_IDS.ANIMATION] };
+      case 0: // Sun
+      default:
+        return { label: '일요일엔 다큐/드라마', genres: [GENRE_IDS.DOCUMENTARY, GENRE_IDS.DRAMA] };
+    }
+  }, []);
 
   // 검색 또는 장르별 영화 가져오기 함수
   const fetchMovies = useCallback(async (page) => {
     if (debouncedQuery.trim()) {
       return searchMovies(debouncedQuery.trim(), page);
-    } else if (selectedGenre) {
-      return getMoviesByGenre(selectedGenre, page);
+    } else if (selectedGenres.length > 0) {
+      return getMoviesByGenres(selectedGenres, page);
     }
     return { results: [], total_results: 0, total_pages: 0 };
-  }, [debouncedQuery, selectedGenre]);
+  }, [debouncedQuery, selectedGenres]);
 
   // 무한 스크롤 훅
   const {
@@ -263,11 +349,12 @@ const Search = () => {
     isLoadingMore,
     hasMore,
     totalResults,
+    error,
     loadMoreRef,
     refresh
   } = useInfiniteScroll(fetchMovies, {
     initialPage: 1,
-    enabled: !!(debouncedQuery.trim() || selectedGenre)
+    enabled: !!(debouncedQuery.trim() || selectedGenres.length)
   });
 
   // 장르 목록 가져오기
@@ -285,18 +372,27 @@ const Search = () => {
     fetchGenres();
   }, []);
 
+  // 초기 렌더 시 요일별 추천 장르 적용 (검색어가 비어 있을 때만)
+  useEffect(() => {
+    if (!searchQuery.trim() && weekdayPreset.genres.length) {
+      setSelectedGenres(weekdayPreset.genres);
+      setPresetLabel(weekdayPreset.label);
+    }
+  }, [searchQuery, weekdayPreset]);
+
   // 검색어 또는 장르 변경 시 새로고침
   useEffect(() => {
-    if (debouncedQuery.trim() || selectedGenre) {
+    if (debouncedQuery.trim() || selectedGenres.length) {
       refresh();
     }
-  }, [debouncedQuery, selectedGenre, refresh]);
+  }, [debouncedQuery, selectedGenres, refresh]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
     // 검색어 입력 시 장르 선택 해제
     if (e.target.value.trim()) {
-      setSelectedGenre(null);
+      setSelectedGenres([]);
+      setPresetLabel('');
     }
   };
 
@@ -305,13 +401,51 @@ const Search = () => {
   };
 
   const handleGenreClick = (genreId) => {
-    if (selectedGenre === genreId) {
-      setSelectedGenre(null);
-    } else {
-      setSelectedGenre(genreId);
-      setSearchQuery(''); // 장르 선택 시 검색어 초기화
-    }
+    setSelectedGenres((prev) => {
+      const exists = prev.includes(genreId);
+      const next = exists ? prev.filter((id) => id !== genreId) : [...prev, genreId];
+      return next;
+    });
+    setSearchQuery(''); // 장르 선택 시 검색어 초기화
+    setPresetLabel(''); // 수동 선택 시 프리셋 문구 제거
   };
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setSelectedGenres([]);
+    setSortField('popularity');
+    setSortOrder('desc');
+    setMinRating(0);
+    setPresetLabel('');
+    refresh();
+  };
+
+  const handleSortChange = (e) => setSortField(e.target.value);
+  const handleOrderChange = (e) => setSortOrder(e.target.value);
+  const handleMinRatingChange = (e) => setMinRating(Number(e.target.value));
+
+  // 정렬/필터 적용된 목록
+  const processedMovies = useMemo(() => {
+    if (!movies) return [];
+    const filtered = movies.filter((m) => (m.vote_average || 0) >= minRating);
+    const sorted = [...filtered].sort((a, b) => {
+      let aVal = a[sortField];
+      let bVal = b[sortField];
+      if (sortField === 'title') {
+        aVal = (aVal || '').toLowerCase();
+        bVal = (bVal || '').toLowerCase();
+        return sortOrder === 'asc' ? aVal.localeCompare(bVal, 'ko') : bVal.localeCompare(aVal, 'ko');
+      }
+      if (sortField === 'release_date') {
+        aVal = new Date(aVal || 0).getTime();
+        bVal = new Date(bVal || 0).getTime();
+      }
+      aVal = aVal || 0;
+      bVal = bVal || 0;
+      return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+    });
+    return sorted;
+  }, [movies, minRating, sortField, sortOrder]);
 
   const handleMovieClick = (movie) => {
     console.log('Movie clicked:', movie);
@@ -322,14 +456,18 @@ const Search = () => {
     if (debouncedQuery.trim()) {
       return `"${debouncedQuery}" 검색 결과`;
     }
-    if (selectedGenre) {
-      const genre = genres.find(g => g.id === selectedGenre);
-      return `${genre?.name || ''} 영화`;
+    if (selectedGenres.length) {
+      // 요일 프리셋이 적용된 상태면 프리셋 문구를 우선 노출
+      if (!searchQuery.trim() && presetLabel) {
+        return presetLabel;
+      }
+      const names = genres.filter(g => selectedGenres.includes(g.id)).map(g => g.name);
+      return names.length ? `${names.join(', ')} 영화` : '선택한 장르 영화';
     }
     return '영화 검색';
   };
 
-  const showResults = debouncedQuery.trim() || selectedGenre;
+  const showResults = !!(debouncedQuery.trim() || selectedGenres.length);
   const showEmptyInitial = !showResults && !isLoading;
 
   return (
@@ -338,7 +476,7 @@ const Search = () => {
       
       <MainContent>
         <SearchSection>
-          <SearchTitle>🔍 영화 검색</SearchTitle>
+          <SearchTitle>영화 검색</SearchTitle>
           
           <SearchForm onSubmit={(e) => e.preventDefault()}>
             <SearchInputWrapper>
@@ -361,7 +499,7 @@ const Search = () => {
           </SearchForm>
 
           <GenreFilterSection>
-            <GenreLabel>장르별 탐색</GenreLabel>
+            <GenreLabel>장르별 탐색 (여러 개 선택 가능)</GenreLabel>
             <GenreList>
               {isGenreLoading ? (
                 <LoadingText>장르 로딩 중...</LoadingText>
@@ -369,7 +507,7 @@ const Search = () => {
                 genres.map(genre => (
                   <GenreButton
                     key={genre.id}
-                    $isActive={selectedGenre === genre.id}
+                    $isActive={selectedGenres.includes(genre.id)}
                     onClick={() => handleGenreClick(genre.id)}
                   >
                     {genre.name}
@@ -394,6 +532,39 @@ const Search = () => {
             </ResultsHeader>
           )}
 
+          {/* 정렬/필터 컨트롤 */}
+          {showResults && (
+            <ControlsRow>
+              <ControlsGroup>
+                <ControlLabel>정렬</ControlLabel>
+                <SelectSmall value={sortField} onChange={handleSortChange}>
+                  <option value="popularity">인기순</option>
+                  <option value="vote_average">평점순</option>
+                  <option value="release_date">개봉일순</option>
+                  <option value="title">제목순</option>
+                </SelectSmall>
+
+                <ControlLabel>정렬 방향</ControlLabel>
+                <SelectSmall value={sortOrder} onChange={handleOrderChange}>
+                  <option value="desc">내림차순</option>
+                  <option value="asc">오름차순</option>
+                </SelectSmall>
+
+                <ControlLabel>최소 평점</ControlLabel>
+                <SelectSmall value={minRating} onChange={handleMinRatingChange}>
+                  <option value={0}>전체</option>
+                  <option value={6}>6.0+</option>
+                  <option value={7}>7.0+</option>
+                  <option value={8}>8.0+</option>
+                  <option value={8.5}>8.5+</option>
+                </SelectSmall>
+              </ControlsGroup>
+              <ResetButton type="button" onClick={handleResetFilters}>
+                초기화
+              </ResetButton>
+            </ControlsRow>
+          )}
+
           {/* 초기 상태 - 검색어/장르 없음 */}
           {showEmptyInitial && (
             <EmptyState>
@@ -414,9 +585,19 @@ const Search = () => {
           )}
 
           {/* 검색 결과 */}
-          {!isLoading && showResults && (
+          {/* 에러 상태 */}
+          {error && (
+            <LoadingContainer>
+              <LoadingText>오류가 발생했습니다: {error}</LoadingText>
+              <ResetButton type="button" onClick={handleResetFilters}>
+                다시 시도
+              </ResetButton>
+            </LoadingContainer>
+          )}
+
+          {!isLoading && showResults && !error && (
             <MovieGrid
-              movies={movies}
+              movies={processedMovies}
               isLoading={isLoading}
               isLoadingMore={isLoadingMore}
               hasMore={hasMore}

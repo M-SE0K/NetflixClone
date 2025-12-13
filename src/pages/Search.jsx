@@ -174,17 +174,6 @@ const ResultsCount = styled.p`
   }
 `;
 
-const PresetBadge = styled.span`
-  display: inline-block;
-  padding: 6px 10px;
-  margin-top: 6px;
-  background: rgba(229, 9, 20, 0.12);
-  color: #ff6b6b;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 600;
-`;
-
 const spin = keyframes`
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
@@ -403,6 +392,7 @@ const Search = () => {
     // 검색어 입력 시 장르 선택 해제
     if (e.target.value.trim()) {
       setSelectedGenres([]);
+      setPresetLabel('');
     }
   };
 
@@ -417,6 +407,7 @@ const Search = () => {
       return next;
     });
     setSearchQuery(''); // 장르 선택 시 검색어 초기화
+    setPresetLabel(''); // 수동 선택 시 프리셋 문구 제거
   };
 
   const handleResetFilters = () => {
@@ -466,6 +457,10 @@ const Search = () => {
       return `"${debouncedQuery}" 검색 결과`;
     }
     if (selectedGenres.length) {
+      // 요일 프리셋이 적용된 상태면 프리셋 문구를 우선 노출
+      if (!searchQuery.trim() && presetLabel) {
+        return presetLabel;
+      }
       const names = genres.filter(g => selectedGenres.includes(g.id)).map(g => g.name);
       return names.length ? `${names.join(', ')} 영화` : '선택한 장르 영화';
     }
@@ -528,9 +523,6 @@ const Search = () => {
             <ResultsHeader>
               <ResultsTitle>
                 {getResultTitle()}
-                {presetLabel && (
-                  <PresetBadge>{presetLabel}</PresetBadge>
-                )}
               </ResultsTitle>
               {totalResults > 0 && (
                 <ResultsCount>

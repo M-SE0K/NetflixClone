@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import MovieGrid from '../components/MovieGrid';
 import useDebounce from '../hooks/useDebounce';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
-import { searchMovies, getGenres, getMoviesByGenre } from '../api/tmdb';
+import { searchMovies, getGenres, getMoviesByGenre, getMoviesByGenres } from '../api/tmdb';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -276,7 +276,7 @@ const SelectSmall = styled.select`
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedGenre, setSelectedGenre] = useState(null);
+  const [selectedGenres, setSelectedGenres] = useState([]);
   const [genres, setGenres] = useState([]);
   const [isGenreLoading, setIsGenreLoading] = useState(true);
   const [sortField, setSortField] = useState('popularity');
@@ -290,11 +290,11 @@ const Search = () => {
   const fetchMovies = useCallback(async (page) => {
     if (debouncedQuery.trim()) {
       return searchMovies(debouncedQuery.trim(), page);
-    } else if (selectedGenre) {
-      return getMoviesByGenre(selectedGenre, page);
+    } else if (selectedGenres.length > 0) {
+      return getMoviesByGenres(selectedGenres, page);
     }
     return { results: [], total_results: 0, total_pages: 0 };
-  }, [debouncedQuery, selectedGenre]);
+  }, [debouncedQuery, selectedGenres]);
 
   // 무한 스크롤 훅
   const {
@@ -307,7 +307,7 @@ const Search = () => {
     refresh
   } = useInfiniteScroll(fetchMovies, {
     initialPage: 1,
-    enabled: !!(debouncedQuery.trim() || selectedGenre)
+    enabled: !!(debouncedQuery.trim() || selectedGenres.length)
   });
 
   // 장르 목록 가져오기
@@ -327,16 +327,16 @@ const Search = () => {
 
   // 검색어 또는 장르 변경 시 새로고침
   useEffect(() => {
-    if (debouncedQuery.trim() || selectedGenre) {
+    if (debouncedQuery.trim() || selectedGenres.length) {
       refresh();
     }
-  }, [debouncedQuery, selectedGenre, refresh]);
+  }, [debouncedQuery, selectedGenres, refresh]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
     // 검색어 입력 시 장르 선택 해제
     if (e.target.value.trim()) {
-      setSelectedGenre(null);
+      setSelectedGenres([]);
     }
   };
 
@@ -345,12 +345,21 @@ const Search = () => {
   };
 
   const handleGenreClick = (genreId) => {
-    if (selectedGenre === genreId) {
-      setSelectedGenre(null);
-    } else {
-      setSelectedGenre(genreId);
-      setSearchQuery(''); // 장르 선택 시 검색어 초기화
-    }
+    setSelectedGenres((prev) => {
+      const exists = prev.includes(genreId);
+      const next = exists ? prev.filter((id) => id !== genreId) : [...prev, genreId];
+      return next;
+    });
+    setSearchQuery(''); // 장르 선택 시 검색어 초기화
+  };
+
+  const handleResetFilters = () => {
+    setSearchQuery('');
+    setSelectedGenres([]);
+    setSortField('popularity');
+    setSortOrder('desc');
+    setMinRating(0);
+    refresh();
   };
 
   const handleSortChange = (e) => setSortField(e.target.value);
@@ -389,14 +398,14 @@ const Search = () => {
     if (debouncedQuery.trim()) {
       return `"${debouncedQuery}" 검색 결과`;
     }
-    if (selectedGenre) {
-      const genre = genres.find(g => g.id === selectedGenre);
-      return `${genre?.name || ''} 영화`;
+    if (selectedGenres.length) {
+      const names = genres.filter(g => selectedGenres.includes(g.id)).map(g => g.name);
+      return names.length ? `${names.join(', ')} 영화` : '선택한 장르 영화';
     }
     return '영화 검색';
   };
 
-  const showResults = debouncedQuery.trim() || selectedGenre;
+  const showResults = debouncedQuery.trim() || selectedGenres.length;
   const showEmptyInitial = !showResults && !isLoading;
 
   return (
@@ -428,7 +437,7 @@ const Search = () => {
           </SearchForm>
 
           <GenreFilterSection>
-            <GenreLabel>장르별 탐색</GenreLabel>
+            <GenreLabel>장르별 탐색 (여러 개 선택 가능)</GenreLabel>
             <GenreList>
               {isGenreLoading ? (
                 <LoadingText>장르 로딩 중...</LoadingText>
@@ -436,7 +445,7 @@ const Search = () => {
                 genres.map(genre => (
                   <GenreButton
                     key={genre.id}
-                    $isActive={selectedGenre === genre.id}
+                    $isActive={selectedGenres.includes(genre.id)}
                     onClick={() => handleGenreClick(genre.id)}
                   >
                     {genre.name}
@@ -464,6 +473,22 @@ const Search = () => {
           {/* 정렬/필터 컨트롤 */}
           {showResults && (
             <ControlsRow>
+              <ControlLabel>필터 초기화</ControlLabel>
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                style={{
+                  padding: '8px 12px',
+                  background: '#2c2c2c',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
+                초기화
+              </button>
+
               <ControlLabel>정렬</ControlLabel>
               <SelectSmall value={sortField} onChange={handleSortChange}>
                 <option value="popularity">인기순</option>

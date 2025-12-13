@@ -262,7 +262,11 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
     toggleWishlist(movie);
   };
 
+  const openDetail = () => setShowDetail(true);
+  const closeDetail = () => setShowDetail(false);
+
   const handleCardClick = () => {
+    openDetail(); // 카드 어디를 눌러도 상세 표시
     if (onCardClick) {
       onCardClick(movie);
     }
@@ -270,7 +274,7 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
 
   const handleInfoClick = (e) => {
     e.stopPropagation();
-    setShowDetail(true);
+    openDetail();
   };
 
   return (
@@ -283,9 +287,22 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
           alt={movie.title}
           loading="lazy"
           onError={() => setImageError(true)}
+          onClick={(e) => {
+            e.stopPropagation();
+            openDetail();
+          }}
+          style={{ cursor: 'pointer' }}
         />
       ) : (
-        <PosterPlaceholder>🎬</PosterPlaceholder>
+        <PosterPlaceholder
+          onClick={(e) => {
+            e.stopPropagation();
+            openDetail();
+          }}
+          style={{ cursor: 'pointer' }}
+        >
+          🎬
+        </PosterPlaceholder>
       )}
 
       <HoverOverlay>
@@ -312,7 +329,7 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
       {/* 상세 모달 */}
       {showDetail &&
         createPortal(
-          <DetailOverlay onClick={() => setShowDetail(false)}>
+          <DetailOverlay onClick={closeDetail}>
             <DetailContent onClick={(e) => e.stopPropagation()}>
               {posterUrl && !imageError ? (
                 <DetailPoster src={posterUrl} alt={movie.title} />
@@ -339,7 +356,7 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
                   <span>{releaseYear}</span>
                 </DetailMeta>
                 <DetailOverview>{movie.overview || '줄거리 정보가 없습니다.'}</DetailOverview>
-                <CloseButton onClick={() => setShowDetail(false)}>닫기</CloseButton>
+                <CloseButton onClick={closeDetail}>닫기</CloseButton>
               </DetailBody>
             </DetailContent>
           </DetailOverlay>,

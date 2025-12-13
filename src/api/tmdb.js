@@ -67,6 +67,28 @@ export const getPopularMovies = async (page = 1) => {
 };
 
 /**
+ * 인기 영화 정렬 (discover 기반 서버 정렬)
+ * sortField: popularity | vote_average | release_date | title
+ * sortOrder: asc | desc
+ */
+export const getPopularMoviesSorted = async (page = 1, sortField = 'popularity', sortOrder = 'desc') => {
+  const sortMap = {
+    popularity: 'popularity',
+    vote_average: 'vote_average',
+    release_date: 'primary_release_date',
+    title: 'original_title'
+  };
+  const key = sortMap[sortField] || 'popularity';
+  const order = sortOrder === 'asc' ? 'asc' : 'desc';
+  return fetchFromTMDB('/discover/movie', {
+    sort_by: `${key}.${order}`,
+    page,
+    // 평점 정렬 시 극단적인 저투표수를 피하기 위해 기본 하한을 둠
+    vote_count_gte: sortField === 'vote_average' ? 200 : undefined
+  });
+};
+
+/**
  * 현재 상영 중인 영화 목록
  */
 export const getNowPlayingMovies = async (page = 1) => {

@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import MovieTable from '../components/MovieTable';
 import MovieGrid from '../components/MovieGrid';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
-import { getPopularMovies } from '../api/tmdb';
+import { getPopularMovies, getPopularMoviesSorted } from '../api/tmdb';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -182,7 +182,7 @@ const PageButton = styled.button`
   }
 
   &:hover:not(:disabled) {
-    background: rgba(255, 255, 255, 0.1);
+    background: #e50914;
     border-color: #e50914;
   }
 `;
@@ -353,31 +353,14 @@ const Popular = () => {
   }, [movies, sortField, sortOrder]);
 
   // 테이블용 데이터 페치 (페이지네이션)
-  const fetchTablePage = useCallback(async (page, pageSize = tablePageSize) => {
+  const fetchTablePage = useCallback(async (page, pageSize = tablePageSize, sortF = sortField, sortO = sortOrder) => {
     try {
       setTableLoading(true);
       setTableError('');
-      // 테이블 페이지는 TMDB 페이지 단위로 불러오고 화면에 맞춰 자름
-      const res = await getPopularMovies(page);
+      // 서버 정렬된 페이지를 받아 화면 크기에 맞춰 자름
+      const res = await getPopularMoviesSorted(page, sortF, sortO);
       const slice = (res.results || []).slice(0, pageSize);
-
-      const sorted = [...slice].sort((a, b) => {
-        let aVal = a[sortField];
-        let bVal = b[sortField];
-        if (sortField === 'title') {
-          aVal = (aVal || '').toLowerCase();
-          bVal = (bVal || '').toLowerCase();
-          return sortOrder === 'asc' ? aVal.localeCompare(bVal, 'ko') : bVal.localeCompare(aVal, 'ko');
-        }
-        if (sortField === 'release_date') {
-          aVal = new Date(aVal || 0).getTime();
-          bVal = new Date(bVal || 0).getTime();
-        }
-        aVal = aVal || 0;
-        bVal = bVal || 0;
-        return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-      });
-      setTableData(sorted);
+      setTableData(slice);
       setTableTotalPages(res.total_pages || 0);
       setTableTotalResults(res.total_results || 0);
     } catch (err) {
@@ -397,35 +380,16 @@ const Popular = () => {
   // 테이블 페이지/사이즈/정렬 변경 시 데이터 로드
   useEffect(() => {
     if (viewMode === VIEW_MODES.TABLE) {
-      fetchTablePage(tablePage, tablePageSize);
+      fetchTablePage(tablePage, tablePageSize, sortField, sortOrder);
     }
   }, [viewMode, tablePage, tablePageSize, sortField, sortOrder, fetchTablePage]);
 
   // 정렬 변경 시 테이블도 정렬 다시 적용 (무한 루프 방지: tableData 비포함)
   useEffect(() => {
     if (viewMode === VIEW_MODES.TABLE) {
-      setTableData((prev) => {
-        if (!prev || !prev.length) return prev;
-        const resorted = [...prev].sort((a, b) => {
-          let aVal = a[sortField];
-          let bVal = b[sortField];
-          if (sortField === 'title') {
-            aVal = (aVal || '').toLowerCase();
-            bVal = (bVal || '').toLowerCase();
-            return sortOrder === 'asc' ? aVal.localeCompare(bVal, 'ko') : bVal.localeCompare(aVal, 'ko');
-          }
-          if (sortField === 'release_date') {
-            aVal = new Date(aVal || 0).getTime();
-            bVal = new Date(bVal || 0).getTime();
-          }
-          aVal = aVal || 0;
-          bVal = bVal || 0;
-          return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
-        });
-        return resorted;
-      });
+      fetchTablePage(tablePage, tablePageSize, sortField, sortOrder);
     }
-  }, [sortField, sortOrder, viewMode]);
+  }, [sortField, sortOrder, viewMode, tablePage, tablePageSize, fetchTablePage]);
 
   // 화면 높이에 맞춰 테이블 페이지 크기 자동 조절 (스크롤 불가 목표)
   useEffect(() => {
@@ -450,12 +414,19 @@ const Popular = () => {
       setSortField(field);
       setSortOrder('desc');
     }
-  }, [sortField]);
+    // 테이블 뷰일 때는 정렬 변경 시 1페이지로 이동
+    if (viewMode === VIEW_MODES.TABLE) {
+      setTablePage(1);
+    }
+  }, [sortField, viewMode]);
 
   // 드롭다운 정렬 변경
   const handleSortChange = (e) => {
     setSortField(e.target.value);
     setSortOrder('desc');
+    if (viewMode === VIEW_MODES.TABLE) {
+      setTablePage(1);
+    }
   };
 
   const handleMovieClick = (movie) => {

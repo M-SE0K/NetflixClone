@@ -71,7 +71,12 @@ export const getPopularMovies = async (page = 1) => {
  * sortField: popularity | vote_average | release_date | title
  * sortOrder: asc | desc
  */
-export const getPopularMoviesSorted = async (page = 1, sortField = 'popularity', sortOrder = 'desc') => {
+export const getPopularMoviesSorted = async (
+  page = 1,
+  sortField = 'popularity',
+  sortOrder = 'desc',
+  originFilter = 'all' // all | kr | foreign
+) => {
   const sortMap = {
     popularity: 'popularity',
     vote_average: 'vote_average',
@@ -80,9 +85,18 @@ export const getPopularMoviesSorted = async (page = 1, sortField = 'popularity',
   };
   const key = sortMap[sortField] || 'popularity';
   const order = sortOrder === 'asc' ? 'asc' : 'desc';
+
+  const originParams =
+    originFilter === 'kr'
+      ? { with_origin_country: 'KR' }
+      : originFilter === 'foreign'
+        ? { without_origin_country: 'KR' }
+        : {};
+
   return fetchFromTMDB('/discover/movie', {
     sort_by: `${key}.${order}`,
     page,
+    ...originParams,
     // 평점 정렬 시 극단적인 저투표수를 피하기 위해 기본 하한을 둠
     vote_count_gte: sortField === 'vote_average' ? 200 : undefined
   });

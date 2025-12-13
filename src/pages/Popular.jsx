@@ -73,6 +73,7 @@ const RightControls = styled.div`
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 `;
 
 const ViewToggle = styled.div`
@@ -292,10 +293,17 @@ const SORT_OPTIONS = [
   { value: 'title', label: '제목순' }
 ];
 
+const ORIGIN_OPTIONS = [
+  { value: 'all', label: '전체' },
+  { value: 'kr', label: '한국만' },
+  { value: 'foreign', label: '해외만' }
+];
+
 const Popular = () => {
   const [viewMode, setViewMode] = useState(VIEW_MODES.GRID);
   const [sortField, setSortField] = useState('popularity');
   const [sortOrder, setSortOrder] = useState('desc');
+  const [originFilter, setOriginFilter] = useState('all');
   // table 전용 상태
   const [tablePageSize, setTablePageSize] = useState(8);
   const [tablePage, setTablePage] = useState(1);
@@ -353,12 +361,12 @@ const Popular = () => {
   }, [movies, sortField, sortOrder]);
 
   // 테이블용 데이터 페치 (페이지네이션)
-  const fetchTablePage = useCallback(async (page, pageSize = tablePageSize, sortF = sortField, sortO = sortOrder) => {
+  const fetchTablePage = useCallback(async (page, pageSize = tablePageSize, sortF = sortField, sortO = sortOrder, origin = originFilter) => {
     try {
       setTableLoading(true);
       setTableError('');
       // 서버 정렬된 페이지를 받아 화면 크기에 맞춰 자름
-      const res = await getPopularMoviesSorted(page, sortF, sortO);
+      const res = await getPopularMoviesSorted(page, sortF, sortO, origin);
       const slice = (res.results || []).slice(0, pageSize);
       setTableData(slice);
       setTableTotalPages(res.total_pages || 0);
@@ -368,7 +376,7 @@ const Popular = () => {
     } finally {
       setTableLoading(false);
     }
-  }, [sortField, sortOrder, tablePageSize]);
+  }, [sortField, sortOrder, originFilter, tablePageSize]);
 
   // 뷰 전환 시 테이블 초기 페이지 로드 및 페이지 리셋
   useEffect(() => {
@@ -380,16 +388,16 @@ const Popular = () => {
   // 테이블 페이지/사이즈/정렬 변경 시 데이터 로드
   useEffect(() => {
     if (viewMode === VIEW_MODES.TABLE) {
-      fetchTablePage(tablePage, tablePageSize, sortField, sortOrder);
+      fetchTablePage(tablePage, tablePageSize, sortField, sortOrder, originFilter);
     }
-  }, [viewMode, tablePage, tablePageSize, sortField, sortOrder, fetchTablePage]);
+  }, [viewMode, tablePage, tablePageSize, sortField, sortOrder, originFilter, fetchTablePage]);
 
   // 정렬 변경 시 테이블도 정렬 다시 적용 (무한 루프 방지: tableData 비포함)
   useEffect(() => {
     if (viewMode === VIEW_MODES.TABLE) {
-      fetchTablePage(tablePage, tablePageSize, sortField, sortOrder);
+      fetchTablePage(tablePage, tablePageSize, sortField, sortOrder, originFilter);
     }
-  }, [sortField, sortOrder, viewMode, tablePage, tablePageSize, fetchTablePage]);
+  }, [sortField, sortOrder, viewMode, tablePage, tablePageSize, originFilter, fetchTablePage]);
 
   // 화면 높이에 맞춰 테이블 페이지 크기 자동 조절 (스크롤 불가 목표)
   useEffect(() => {
@@ -427,6 +435,12 @@ const Popular = () => {
     if (viewMode === VIEW_MODES.TABLE) {
       setTablePage(1);
     }
+  };
+
+  const handleOriginChange = (e) => {
+    const value = e.target.value;
+    setOriginFilter(value);
+    setTablePage(1);
   };
 
   const handleMovieClick = (movie) => {
@@ -469,6 +483,14 @@ const Popular = () => {
 
             <Select value={sortField} onChange={handleSortChange}>
               {SORT_OPTIONS.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </Select>
+
+            <Select value={originFilter} onChange={handleOriginChange}>
+              {ORIGIN_OPTIONS.map(option => (
                 <option key={option.value} value={option.value}>
                   {option.label}
                 </option>

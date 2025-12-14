@@ -234,7 +234,6 @@ const DetailOverview = styled.p`
 `;
 
 const CloseButton = styled.button`
-  align-self: flex-end;
   padding: 10px 16px;
   background: #e50914;
   color: #fff;
@@ -243,6 +242,7 @@ const CloseButton = styled.button`
   cursor: pointer;
   font-weight: 700;
   transition: background 0.2s;
+  margin-left: auto;
 
   &:hover {
     background: #b20710;
@@ -251,7 +251,7 @@ const CloseButton = styled.button`
 
 const DetailActions = styled.div`
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;

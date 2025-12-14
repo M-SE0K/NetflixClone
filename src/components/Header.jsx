@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
 import { useAuth } from '../hooks/useAuth.jsx';
 import { useWishlist } from '../hooks/useWishlist.jsx';
+import { Search, Heart, LogOut, Menu, X } from 'lucide-react';
 
 const HeaderContainer = styled.header`
   position: fixed;
@@ -67,36 +68,44 @@ const RightSection = styled.div`
   gap: 20px;
 `;
 
-const SearchButton = styled.button`
+const IconButton = styled.button`
   background: none;
-  border: none;
+  border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
   padding: 8px;
   display: flex;
   align-items: center;
-  transition: transform 0.2s;
+  justify-content: center;
+  border-radius: 10px;
+  transition: transform 0.2s, background 0.2s, border-color 0.2s;
 
   &:hover {
-    transform: scale(1.1);
+    transform: scale(1.06);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.35);
   }
 `;
 
 const WishlistButton = styled(Link)`
   position: relative;
   background: none;
-  border: none;
+  border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
   padding: 8px;
   display: flex;
   align-items: center;
-  transition: transform 0.2s;
+  justify-content: center;
+  border-radius: 10px;
+  transition: transform 0.2s, background 0.2s, border-color 0.2s;
 
   &:hover {
-    transform: scale(1.1);
+    transform: scale(1.06);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.35);
   }
 `;
 
@@ -190,11 +199,19 @@ const DropdownItem = styled.button`
 const MobileMenuButton = styled.button`
   display: none;
   background: none;
-  border: none;
+  border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
-  font-size: 24px;
+  font-size: 20px;
   cursor: pointer;
   padding: 8px;
+  border-radius: 10px;
+  transition: transform 0.2s, background 0.2s, border-color 0.2s;
+
+  &:hover {
+    transform: scale(1.06);
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(255,255,255,0.35);
+  }
 
   @media (max-width: 768px) {
     display: block;
@@ -283,12 +300,12 @@ const Header = () => {
         </div>
 
         <RightSection>
-          <SearchButton onClick={() => navigate('/search')}>
-            🔍
-          </SearchButton>
+          <IconButton onClick={() => navigate('/search')} title="검색">
+            <Search size={18} />
+          </IconButton>
           
-          <WishlistButton to="/wishlist">
-            ❤️
+          <WishlistButton to="/wishlist" title="내가 찜한 리스트">
+            <Heart size={18} />
             {wishlistCount > 0 && (
               <WishlistBadge>{wishlistCount}</WishlistBadge>
             )}
@@ -312,8 +329,8 @@ const Header = () => {
             </Dropdown>
           </UserMenu>
 
-          <MobileMenuButton onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? '✕' : '☰'}
+          <MobileMenuButton onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} title="메뉴">
+            {isMobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
           </MobileMenuButton>
         </RightSection>
       </HeaderContainer>

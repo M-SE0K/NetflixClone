@@ -3,6 +3,20 @@ import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import { getImageUrl } from '../api/tmdb';
 import { useWishlist } from '../hooks/useWishlist.jsx';
+import {
+  Play,
+  Info,
+  Heart,
+  Check,
+  X,
+  Star,
+  Flame,
+  Calendar,
+  Languages,
+  Users,
+  BookOpenText,
+  Globe2
+} from 'lucide-react';
 
 const scaleUp = keyframes`
   from {
@@ -128,13 +142,12 @@ const ButtonGroup = styled.div`
 `;
 
 const IconButton = styled.button`
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
   border-radius: 50%;
   border: 1px solid rgba(255, 255, 255, 0.5);
   background: ${props => props.$isActive ? '#e50914' : 'rgba(42, 42, 42, 0.8)'};
   color: #fff;
-  font-size: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -144,7 +157,7 @@ const IconButton = styled.button`
   &:hover {
     background: ${props => props.$isActive ? '#b20710' : 'rgba(255, 255, 255, 0.2)'};
     border-color: #fff;
-    transform: scale(1.1);
+    transform: scale(1.08);
   }
 `;
 
@@ -373,15 +386,19 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
             <Year>{releaseYear}</Year>
           </MovieInfo>
           <ButtonGroup>
-            <IconButton title="재생">▶</IconButton>
+            <IconButton title="재생">
+              <Play size={16} />
+            </IconButton>
             <IconButton 
               $isActive={isWishlisted}
               onClick={handleWishlistClick}
               title={isWishlisted ? '내 리스트에서 제거' : '내 리스트에 추가'}
             >
-              {isWishlisted ? '✓' : '+'}
+              {isWishlisted ? <Check size={16} /> : <Heart size={16} />}
             </IconButton>
-            <IconButton title="상세 정보" onClick={handleInfoClick}>ℹ</IconButton>
+            <IconButton title="상세 정보" onClick={handleInfoClick}>
+              <Info size={16} />
+            </IconButton>
           </ButtonGroup>
         </HoverContent>
       </HoverOverlay>
@@ -411,34 +428,48 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
               <DetailBody>
                 <DetailTitle>{movie.title}</DetailTitle>
                 <PillRow>
-                  <Pill $type="rating">⭐ {rating}</Pill>
-                  <Pill $type="pop">🔥 {popularity}</Pill>
-                  <Pill>{releaseYear || '미정'}</Pill>
-                  <Pill>{language || 'N/A'}</Pill>
-                  <Pill>{voteCount}</Pill>
+                  <Pill $type="rating">
+                    <Star size={14} /> {rating}
+                  </Pill>
+                  <Pill $type="pop">
+                    <Flame size={14} /> {popularity}
+                  </Pill>
+                  <Pill>
+                    <Calendar size={14} /> {releaseYear || '미정'}
+                  </Pill>
+                  <Pill>
+                    <Languages size={14} /> {language || 'N/A'}
+                  </Pill>
+                  <Pill>
+                    <Users size={14} /> {voteCount}
+                  </Pill>
                 </PillRow>
 
                 <DetailOverview>{movie.overview || '줄거리 정보가 없습니다.'}</DetailOverview>
-              <DetailActions>
+                <DetailActions>
                   <LinkButton href={wikiUrl} target="_blank" rel="noopener noreferrer">
+                    <BookOpenText size={16} />
                     나무위키
                   </LinkButton>
                   <LinkButton href={googleUrl} target="_blank" rel="noopener noreferrer">
+                    <Globe2 size={16} />
                     Google
                   </LinkButton>
-                <IconButton
-                  $isActive={isWishlisted}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleWishlist(movie);
-                  }}
-                  title={isWishlisted ? '내 리스트에서 제거' : '내 리스트에 추가'}
-                  style={{ width: 42, height: 42, fontSize: 14 }}
-                >
-                  {isWishlisted ? '✓' : '+'}
-                </IconButton>
-                <CloseButton onClick={closeDetail}>닫기</CloseButton>
-              </DetailActions>
+                  <IconButton
+                    $isActive={isWishlisted}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleWishlist(movie);
+                    }}
+                    title={isWishlisted ? '내 리스트에서 제거' : '내 리스트에 추가'}
+                    style={{ width: 42, height: 42 }}
+                  >
+                    {isWishlisted ? <Check size={18} /> : <Heart size={18} />}
+                  </IconButton>
+                  <CloseButton onClick={closeDetail}>
+                    <X size={16} />
+                  </CloseButton>
+                </DetailActions>
               </DetailBody>
             </DetailContent>
           </DetailOverlay>,

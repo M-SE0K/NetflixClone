@@ -550,17 +550,6 @@ const Popular = () => {
                 onMovieClick={handleMovieClick}
               />
             )}
-            {viewMode === VIEW_MODES.GRID && hasMore && (
-              <LoadMoreWrapper>
-                <PageButton
-                  type="button"
-                  onClick={loadMore}
-                  disabled={isLoadingMore}
-                >
-                  {isLoadingMore ? '불러오는 중...' : '더 불러오기'}
-                </PageButton>
-              </LoadMoreWrapper>
-            )}
             {viewMode === VIEW_MODES.TABLE && tableError && (
               <LoadingContainer>
                 <LoadingText>{tableError}</LoadingText>

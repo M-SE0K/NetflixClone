@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
+import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth.jsx';
@@ -703,7 +704,7 @@ const SignIn = () => {
                   aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                   title={showPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                 >
-                  {showPassword ? '🙈' : '👁️'}
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </ToggleButton>
                 {errors.password && <ErrorText>{errors.password}</ErrorText>}
               </InputGroup>
@@ -734,7 +735,7 @@ const SignIn = () => {
                       aria-label={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                       title={showConfirmPassword ? '비밀번호 숨기기' : '비밀번호 보이기'}
                     >
-                      {showConfirmPassword ? '🙈' : '👁️'}
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </ToggleButton>
                     {errors.confirmPassword && <ErrorText>{errors.confirmPassword}</ErrorText>}
                   </InputGroup>

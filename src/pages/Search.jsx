@@ -57,6 +57,49 @@ const SearchInputWrapper = styled.div`
   max-width: 600px;
 `;
 
+const RecentSection = styled.div`
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+`;
+
+const RecentLabel = styled.span`
+  color: #888;
+  font-size: 13px;
+`;
+
+const RecentChip = styled.button`
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  border-radius: 20px;
+  padding: 6px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  &:hover {
+    background: rgba(229, 9, 20, 0.15);
+    border-color: #e50914;
+  }
+`;
+
+const ClearRecent = styled.button`
+  border: none;
+  background: transparent;
+  color: #b3b3b3;
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+  margin-left: auto;
+
+  &:hover {
+    color: #fff;
+  }
+`;
+
 const SearchIcon = styled.span`
   position: absolute;
   left: 16px;
@@ -285,6 +328,7 @@ const ControlsGroup = styled.div`
 
 const Search = () => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [recentSearches, setRecentSearches] = useState([]);
   const [selectedGenres, setSelectedGenres] = useState([]);
   const [genres, setGenres] = useState([]);
   const [isGenreLoading, setIsGenreLoading] = useState(true);
@@ -292,9 +336,34 @@ const Search = () => {
   const [sortOrder, setSortOrder] = useState('desc');
   const [minRating, setMinRating] = useState(0);
   const [presetLabel, setPresetLabel] = useState('');
+  const RECENT_KEY = 'recentSearches';
+  const MAX_RECENT = 8;
 
   // Debounce 적용 (500ms)
   const debouncedQuery = useDebounce(searchQuery, 500);
+  
+  // 최근 검색어 로드
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(RECENT_KEY);
+      if (saved) {
+        setRecentSearches(JSON.parse(saved));
+      }
+    } catch (e) {
+      console.error('Failed to load recent searches', e);
+    }
+  }, []);
+
+  // 최근 검색어 저장
+  const pushRecent = useCallback((keyword) => {
+    const term = keyword.trim();
+    if (!term) return;
+    setRecentSearches((prev) => {
+      const next = [term, ...prev.filter((t) => t !== term)].slice(0, MAX_RECENT);
+      localStorage.setItem(RECENT_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
 
   // 요일별 추천 장르 프리셋
   const weekdayPreset = useMemo(() => {
@@ -321,12 +390,13 @@ const Search = () => {
   // 검색 또는 장르별 영화 가져오기 함수
   const fetchMovies = useCallback(async (page) => {
     if (debouncedQuery.trim()) {
+      pushRecent(debouncedQuery.trim());
       return searchMovies(debouncedQuery.trim(), page);
     } else if (selectedGenres.length > 0) {
       return getMoviesByGenres(selectedGenres, page);
     }
     return { results: [], total_results: 0, total_pages: 0 };
-  }, [debouncedQuery, selectedGenres]);
+  }, [debouncedQuery, selectedGenres, pushRecent]);
 
   // 무한 스크롤 훅
   const {
@@ -406,6 +476,17 @@ const Search = () => {
     refresh();
   };
 
+  const handleRecentClick = (term) => {
+    setSearchQuery(term);
+    setSelectedGenres([]);
+    setPresetLabel('');
+  };
+
+  const handleClearRecent = () => {
+    setRecentSearches([]);
+    localStorage.removeItem(RECENT_KEY);
+  };
+
   const handleSortChange = (e) => setSortField(e.target.value);
   const handleOrderChange = (e) => setSortOrder(e.target.value);
   const handleMinRatingChange = (e) => setMinRating(Number(e.target.value));
@@ -483,6 +564,20 @@ const Search = () => {
               </ClearButton>
             </SearchInputWrapper>
           </SearchForm>
+
+          {recentSearches.length > 0 && (
+            <RecentSection>
+              <RecentLabel>최근 검색어</RecentLabel>
+              {recentSearches.map((term) => (
+                <RecentChip key={term} onClick={() => handleRecentClick(term)}>
+                  {term}
+                </RecentChip>
+              ))}
+              <ClearRecent type="button" onClick={handleClearRecent}>
+                비우기
+              </ClearRecent>
+            </RecentSection>
+          )}
 
         </SearchSection>
 

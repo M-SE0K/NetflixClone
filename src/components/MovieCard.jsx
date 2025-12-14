@@ -1,22 +1,9 @@
 import { useState } from 'react';
-import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import { getImageUrl } from '../api/tmdb';
 import { useWishlist } from '../hooks/useWishlist.jsx';
-import {
-  Play,
-  Info,
-  Heart,
-  Check,
-  X,
-  Star,
-  Flame,
-  Calendar,
-  Languages,
-  Users,
-  BookOpenText,
-  Globe2
-} from 'lucide-react';
+import { Play, Info, Heart, Check } from 'lucide-react';
+import MovieDetailModal from './MovieDetailModal';
 
 const scaleUp = keyframes`
   from {
@@ -404,77 +391,9 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
       </HoverOverlay>
 
       {/* 상세 모달 */}
-      {showDetail &&
-        createPortal(
-          <DetailOverlay onClick={closeDetail}>
-            <DetailContent onClick={(e) => e.stopPropagation()}>
-              {posterUrl && !imageError ? (
-                <DetailPoster src={posterUrl} alt={movie.title} />
-              ) : (
-                <DetailPoster
-                  as="div"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: '#222',
-                    color: '#888',
-                    fontSize: '40px',
-                  }}
-                >
-                  🎬
-                </DetailPoster>
-              )}
-              <DetailBody>
-                <DetailTitle>{movie.title}</DetailTitle>
-                <PillRow>
-                  <Pill $type="rating">
-                    <Star size={14} /> {rating}
-                  </Pill>
-                  <Pill $type="pop">
-                    <Flame size={14} /> {popularity}
-                  </Pill>
-                  <Pill>
-                    <Calendar size={14} /> {releaseYear || '미정'}
-                  </Pill>
-                  <Pill>
-                    <Languages size={14} /> {language || 'N/A'}
-                  </Pill>
-                  <Pill>
-                    <Users size={14} /> {voteCount}
-                  </Pill>
-                </PillRow>
-
-                <DetailOverview>{movie.overview || '줄거리 정보가 없습니다.'}</DetailOverview>
-                <DetailActions>
-                  <LinkButton href={wikiUrl} target="_blank" rel="noopener noreferrer">
-                    <BookOpenText size={16} />
-                    나무위키
-                  </LinkButton>
-                  <LinkButton href={googleUrl} target="_blank" rel="noopener noreferrer">
-                    <Globe2 size={16} />
-                    Google
-                  </LinkButton>
-                  <IconButton
-                    $isActive={isWishlisted}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleWishlist(movie);
-                    }}
-                    title={isWishlisted ? '내 리스트에서 제거' : '내 리스트에 추가'}
-                    style={{ width: 42, height: 42 }}
-                  >
-                    {isWishlisted ? <Check size={18} /> : <Heart size={18} />}
-                  </IconButton>
-                  <CloseButton onClick={closeDetail}>
-                    <X size={16} />
-                  </CloseButton>
-                </DetailActions>
-              </DetailBody>
-            </DetailContent>
-          </DetailOverlay>,
-          document.body
-        )}
+      {showDetail && (
+        <MovieDetailModal movie={movie} onClose={closeDetail} />
+      )}
     </CardContainer>
   );
 };

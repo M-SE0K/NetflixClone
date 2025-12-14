@@ -341,13 +341,15 @@ const ORIGIN_OPTIONS = [
   { value: 'foreign', label: '해외만' }
 ];
 
+const GRID_PAGE_SIZE = 4;
+
 const Popular = () => {
   const [viewMode, setViewMode] = useState(VIEW_MODES.GRID);
   const [sortField, setSortField] = useState('popularity');
   const [sortOrder, setSortOrder] = useState('desc');
   const [originFilter, setOriginFilter] = useState('all');
   // table 전용 상태
-  const [tablePageSize, setTablePageSize] = useState(8);
+  const [tablePageSize, setTablePageSize] = useState(4);
   const [tablePage, setTablePage] = useState(1);
   const [tableData, setTableData] = useState([]);
   const [tableTotalPages, setTableTotalPages] = useState(0);
@@ -357,6 +359,17 @@ const Popular = () => {
   const [tablePending, setTablePending] = useState(false);
 
   // Infinite Scroll 훅 사용
+  const fetchPopularForGrid = useCallback(async (page) => {
+    const res = await getPopularMoviesSorted(page, sortField, sortOrder, originFilter);
+    const total = res.total_results || 0;
+    const totalPages = Math.max(1, Math.ceil(total / GRID_PAGE_SIZE));
+    return {
+      ...res,
+      results: (res.results || []).slice(0, GRID_PAGE_SIZE),
+      total_pages: totalPages
+    };
+  }, [sortField, sortOrder, originFilter]);
+
   const {
     data: movies,
     isLoading,
@@ -367,7 +380,7 @@ const Popular = () => {
     loadMoreRef,
     loadMore,
     refresh
-  } = useInfiniteScroll(getPopularMovies, {
+  } = useInfiniteScroll(fetchPopularForGrid, {
     initialPage: 1,
     enabled: true
   });
@@ -451,8 +464,8 @@ const Popular = () => {
       const headerReserve = 320; // 헤더/컨트롤 여유 높이
       const rowHeight = 92; // 행 높이 추정 (포스터 68 + 패딩 등)
       const available = Math.max(200, viewportH - headerReserve);
-      const size = Math.max(5, Math.min(12, Math.floor(available / rowHeight)));
-      setTablePageSize(size);
+      const size = Math.max(2, Math.floor(available / rowHeight));
+      setTablePageSize(Math.min(4, size || 4)); // 최대 4개로 제한
     };
     calcPageSize();
     window.addEventListener('resize', calcPageSize);
@@ -487,6 +500,11 @@ const Popular = () => {
     setOriginFilter(value);
     setTablePage(1);
   };
+
+  // 그리드 정렬/필터 변경 시 데이터 리셋
+  useEffect(() => {
+    refresh();
+  }, [sortField, sortOrder, originFilter, refresh]);
 
   const handleMovieClick = (movie) => {
     console.log('Movie clicked:', movie);

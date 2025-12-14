@@ -5,6 +5,7 @@ import MovieTable from '../components/MovieTable';
 import MovieGrid from '../components/MovieGrid';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
 import { getPopularMovies, getPopularMoviesSorted, getGenres } from '../api/tmdb';
+import PopularFilters from '../components/PopularFilters';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -272,51 +273,6 @@ const LoadingText = styled.p`
   animation: ${pulse} 1.5s ease-in-out infinite;
 `;
 
-const FilterSection = styled.div`
-  margin: 10px 0 14px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: center;
-`;
-
-const GenreList = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-`;
-
-const GenreButton = styled.button`
-  padding: 8px 12px;
-  border-radius: 999px;
-  border: 1px solid ${props => props.$isActive ? '#e50914' : 'rgba(255,255,255,0.15)'};
-  background: ${props => props.$isActive ? 'rgba(229, 9, 20, 0.15)' : 'rgba(255,255,255,0.05)'};
-  color: #fff;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    border-color: #e50914;
-    background: rgba(229, 9, 20, 0.2);
-  }
-`;
-
-const SelectSmall = styled.select`
-  padding: 8px 10px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 8px;
-  color: #fff;
-  font-size: 13px;
-  cursor: pointer;
-  outline: none;
-
-  option {
-    background: #1a1a1a;
-    color: #fff;
-  }
-`;
 
 const PendingOverlay = styled.div`
   position: absolute;
@@ -678,57 +634,28 @@ const Popular = () => {
             </Select>
           </LeftControls>
 
-          <RightControls>
-            {totalResults > 0 && (
-              <ResultInfo>
-                총 <span>{totalResults.toLocaleString()}</span>개의 영화
-              </ResultInfo>
-            )}
-            <RefreshButton onClick={refresh} disabled={isLoading}>
-              새로고침
-            </RefreshButton>
-            <ResetButton
-              type="button"
-              onClick={() => {
-                setSortField('popularity');
-                setSortOrder('desc');
-                setOriginFilter('all');
-                setMinRating(0);
-                setSelectedGenres([]);
-                setTablePage(1);
-                refresh();
-              }}
-            >
-              초기화
-            </ResetButton>
-          </RightControls>
         </ControlsContainer>
 
-        <FilterSection>
-          <SelectSmall value={minRating} onChange={handleMinRatingChange} aria-label="최소 평점">
-            <option value={0}>평점 전체</option>
-            <option value={6}>6.0+</option>
-            <option value={7}>7.0+</option>
-            <option value={8}>8.0+</option>
-            <option value={8.5}>8.5+</option>
-          </SelectSmall>
-
-          {isGenreLoading ? (
-            <span style={{ color: '#888', fontSize: 13 }}>장르 로딩 중...</span>
-          ) : (
-            <GenreList>
-              {genres.map(g => (
-                <GenreButton
-                  key={g.id}
-                  $isActive={selectedGenres.includes(g.id)}
-                  onClick={() => handleGenreClick(g.id)}
-                >
-                  {g.name}
-                </GenreButton>
-              ))}
-            </GenreList>
-          )}
-        </FilterSection>
+        <PopularFilters
+          totalResults={totalResults}
+          minRating={minRating}
+          onMinRatingChange={handleMinRatingChange}
+          genres={genres}
+          selectedGenres={selectedGenres}
+          isGenreLoading={isGenreLoading}
+          onGenreToggle={handleGenreClick}
+          onRefresh={refresh}
+          onReset={() => {
+            setSortField('popularity');
+            setSortOrder('desc');
+            setOriginFilter('all');
+            setMinRating(0);
+            setSelectedGenres([]);
+            setTablePage(1);
+            refresh();
+          }}
+          isLoading={isLoading}
+        />
 
         {/* 에러 상태 */}
         {error && (

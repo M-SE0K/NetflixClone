@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { toast } from 'react-toastify';
 
 // Wishlist Context 생성
 const WishlistContext = createContext(null);
@@ -75,6 +76,7 @@ export const WishlistProvider = ({ children }) => {
       return false; // 제거됨
     } else {
       addToWishlist(movie);
+      toast.success(`${movie.title || '영화'}이 위시리스트에 추가되었습니다!`);
       return true; // 추가됨
     }
   }, [isInWishlist, addToWishlist, removeFromWishlist]);

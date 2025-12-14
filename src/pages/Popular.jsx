@@ -4,7 +4,7 @@ import Header from '../components/Header';
 import MovieTable from '../components/MovieTable';
 import MovieGrid from '../components/MovieGrid';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
-import { getPopularMovies, getPopularMoviesSorted } from '../api/tmdb';
+import { getPopularMovies, getPopularMoviesSorted, getGenres } from '../api/tmdb';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -251,6 +251,52 @@ const LoadingText = styled.p`
   animation: ${pulse} 1.5s ease-in-out infinite;
 `;
 
+const FilterSection = styled.div`
+  margin: 10px 0 14px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+`;
+
+const GenreList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const GenreButton = styled.button`
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid ${props => props.$isActive ? '#e50914' : 'rgba(255,255,255,0.15)'};
+  background: ${props => props.$isActive ? 'rgba(229, 9, 20, 0.15)' : 'rgba(255,255,255,0.05)'};
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: #e50914;
+    background: rgba(229, 9, 20, 0.2);
+  }
+`;
+
+const SelectSmall = styled.select`
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  outline: none;
+
+  option {
+    background: #1a1a1a;
+    color: #fff;
+  }
+`;
+
 const PendingOverlay = styled.div`
   position: absolute;
   inset: 0;
@@ -348,6 +394,10 @@ const Popular = () => {
   const [sortField, setSortField] = useState('popularity');
   const [sortOrder, setSortOrder] = useState('desc');
   const [originFilter, setOriginFilter] = useState('all');
+  const [minRating, setMinRating] = useState(0);
+  const [genres, setGenres] = useState([]);
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [isGenreLoading, setIsGenreLoading] = useState(true);
   // table 전용 상태
   const [tablePageSize, setTablePageSize] = useState(4);
   const [tablePage, setTablePage] = useState(1);
@@ -385,6 +435,21 @@ const Popular = () => {
     enabled: true
   });
 
+  // 장르 목록
+  useEffect(() => {
+    const loadGenres = async () => {
+      try {
+        const res = await getGenres();
+        setGenres(res.genres || []);
+      } catch (err) {
+        console.error('Failed to fetch genres:', err);
+      } finally {
+        setIsGenreLoading(false);
+      }
+    };
+    loadGenres();
+  }, []);
+
   // 정렬된 영화 목록
   const sortedMovies = useMemo(() => {
     if (!movies || movies.length === 0) return [];
@@ -415,6 +480,24 @@ const Popular = () => {
       return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
     });
   }, [movies, sortField, sortOrder]);
+
+  // 필터 적용 (장르, 최소 평점)
+  const filteredMovies = useMemo(() => {
+    let result = sortedMovies;
+
+    if (minRating > 0) {
+      result = result.filter(m => (m.vote_average || 0) >= minRating);
+    }
+
+    if (selectedGenres.length) {
+      result = result.filter(m => {
+        if (!m.genre_ids) return false;
+        return selectedGenres.every(g => m.genre_ids.includes(g));
+      });
+    }
+
+    return result;
+  }, [sortedMovies, minRating, selectedGenres]);
 
   // 테이블용 데이터 페치 (페이지네이션)
   const fetchTablePage = useCallback(async (page, pageSize = tablePageSize, sortF = sortField, sortO = sortOrder, origin = originFilter) => {
@@ -501,6 +584,19 @@ const Popular = () => {
     setTablePage(1);
   };
 
+  const handleMinRatingChange = (e) => {
+    setMinRating(Number(e.target.value));
+  };
+
+  const handleGenreClick = (genreId) => {
+    setSelectedGenres(prev => {
+      if (prev.includes(genreId)) {
+        return prev.filter(id => id !== genreId);
+      }
+      return [...prev, genreId];
+    });
+  };
+
   // 그리드 정렬/필터 변경 시 데이터 리셋
   useEffect(() => {
     refresh();
@@ -574,6 +670,32 @@ const Popular = () => {
           </RightControls>
         </ControlsContainer>
 
+        <FilterSection>
+          <SelectSmall value={minRating} onChange={handleMinRatingChange} aria-label="최소 평점">
+            <option value={0}>평점 전체</option>
+            <option value={6}>6.0+</option>
+            <option value={7}>7.0+</option>
+            <option value={8}>8.0+</option>
+            <option value={8.5}>8.5+</option>
+          </SelectSmall>
+
+          {isGenreLoading ? (
+            <span style={{ color: '#888', fontSize: 13 }}>장르 로딩 중...</span>
+          ) : (
+            <GenreList>
+              {genres.map(g => (
+                <GenreButton
+                  key={g.id}
+                  $isActive={selectedGenres.includes(g.id)}
+                  onClick={() => handleGenreClick(g.id)}
+                >
+                  {g.name}
+                </GenreButton>
+              ))}
+            </GenreList>
+          )}
+        </FilterSection>
+
         {/* 에러 상태 */}
         {error && (
           <ErrorContainer>
@@ -596,7 +718,7 @@ const Popular = () => {
           <>
             {viewMode === VIEW_MODES.GRID ? (
               <MovieGrid
-                movies={sortedMovies}
+                movies={filteredMovies}
                 isLoading={isLoading}
                 isLoadingMore={isLoadingMore}
                 hasMore={hasMore}

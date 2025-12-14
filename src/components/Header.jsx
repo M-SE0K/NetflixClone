@@ -112,6 +112,7 @@ const IconButton = styled.button`
     transform: translateY(-1px) scale(1.06);
     background: rgba(255,255,255,0.12);
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    color: #e50914;
   }
 `;
 
@@ -132,6 +133,7 @@ const WishlistButton = styled(Link)`
     transform: translateY(-1px) scale(1.06);
     background: rgba(255,255,255,0.12);
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+    color: #e50914;
   }
 `;
 

@@ -4,7 +4,8 @@ import Header from '../components/Header';
 import MovieTable from '../components/MovieTable';
 import MovieGrid from '../components/MovieGrid';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
-import { getPopularMovies, getPopularMoviesSorted } from '../api/tmdb';
+import { getPopularMovies, getPopularMoviesSorted, getGenres } from '../api/tmdb';
+import PopularFilters from '../components/PopularFilters';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -74,6 +75,7 @@ const RightControls = styled.div`
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  margin-left: auto;
 `;
 
 const ViewToggle = styled.div`
@@ -139,7 +141,32 @@ const RefreshButton = styled.button`
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
-  background: transparent;
+  background-color: ;
+  background: #e50914;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s; 
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #e50914;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const ResetButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #e50914;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   color: #fff;
@@ -150,11 +177,6 @@ const RefreshButton = styled.button`
   &:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: #e50914;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
   }
 `;
 
@@ -220,6 +242,11 @@ const spin = keyframes`
   100% { transform: rotate(360deg); }
 `;
 
+const pulse = keyframes`
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+`;
+
 const LoadingContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -230,17 +257,55 @@ const LoadingContainer = styled.div`
 `;
 
 const LoadingSpinner = styled.div`
-  width: 50px;
-  height: 50px;
-  border: 3px solid rgba(229, 9, 20, 0.3);
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  border-top-color: #e50914;
+  background: conic-gradient(from 90deg, rgba(229, 9, 20, 0.9), rgba(255, 255, 255, 0.1), rgba(229, 9, 20, 0.9));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 8px));
   animation: ${spin} 1s linear infinite;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
 `;
 
 const LoadingText = styled.p`
   color: #888;
   font-size: 14px;
+  letter-spacing: 0.4px;
+  animation: ${pulse} 1.5s ease-in-out infinite;
+`;
+
+
+const PendingOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  z-index: 5;
+  pointer-events: none;
+`;
+
+const PendingCard = styled.div`
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #fff;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
+`;
+
+const PendingDot = styled.span`
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e50914;
+  animation: ${pulse} 1s infinite;
 `;
 
 const ErrorContainer = styled.div`
@@ -299,21 +364,39 @@ const ORIGIN_OPTIONS = [
   { value: 'foreign', label: '해외만' }
 ];
 
+const GRID_PAGE_SIZE = 4;
+
 const Popular = () => {
   const [viewMode, setViewMode] = useState(VIEW_MODES.GRID);
   const [sortField, setSortField] = useState('popularity');
   const [sortOrder, setSortOrder] = useState('desc');
   const [originFilter, setOriginFilter] = useState('all');
+  const [minRating, setMinRating] = useState(0);
+  const [genres, setGenres] = useState([]);
+  const [selectedGenres, setSelectedGenres] = useState([]);
+  const [isGenreLoading, setIsGenreLoading] = useState(true);
   // table 전용 상태
-  const [tablePageSize, setTablePageSize] = useState(8);
+  const [tablePageSize, setTablePageSize] = useState(4);
   const [tablePage, setTablePage] = useState(1);
   const [tableData, setTableData] = useState([]);
   const [tableTotalPages, setTableTotalPages] = useState(0);
   const [tableTotalResults, setTableTotalResults] = useState(0);
   const [tableLoading, setTableLoading] = useState(false);
   const [tableError, setTableError] = useState('');
+  const [tablePending, setTablePending] = useState(false);
 
   // Infinite Scroll 훅 사용
+  const fetchPopularForGrid = useCallback(async (page) => {
+    const res = await getPopularMoviesSorted(page, sortField, sortOrder, originFilter);
+    const total = res.total_results || 0;
+    const totalPages = Math.max(1, Math.ceil(total / GRID_PAGE_SIZE));
+    return {
+      ...res,
+      results: (res.results || []).slice(0, GRID_PAGE_SIZE),
+      total_pages: totalPages
+    };
+  }, [sortField, sortOrder, originFilter]);
+
   const {
     data: movies,
     isLoading,
@@ -324,10 +407,25 @@ const Popular = () => {
     loadMoreRef,
     loadMore,
     refresh
-  } = useInfiniteScroll(getPopularMovies, {
+  } = useInfiniteScroll(fetchPopularForGrid, {
     initialPage: 1,
     enabled: true
   });
+
+  // 장르 목록
+  useEffect(() => {
+    const loadGenres = async () => {
+      try {
+        const res = await getGenres();
+        setGenres(res.genres || []);
+      } catch (err) {
+        console.error('Failed to fetch genres:', err);
+      } finally {
+        setIsGenreLoading(false);
+      }
+    };
+    loadGenres();
+  }, []);
 
   // 정렬된 영화 목록
   const sortedMovies = useMemo(() => {
@@ -360,10 +458,29 @@ const Popular = () => {
     });
   }, [movies, sortField, sortOrder]);
 
+  // 필터 적용 (장르, 최소 평점)
+  const filteredMovies = useMemo(() => {
+    let result = sortedMovies;
+
+    if (minRating > 0) {
+      result = result.filter(m => (m.vote_average || 0) >= minRating);
+    }
+
+    if (selectedGenres.length) {
+      result = result.filter(m => {
+        if (!m.genre_ids) return false;
+        return selectedGenres.every(g => m.genre_ids.includes(g));
+      });
+    }
+
+    return result;
+  }, [sortedMovies, minRating, selectedGenres]);
+
   // 테이블용 데이터 페치 (페이지네이션)
   const fetchTablePage = useCallback(async (page, pageSize = tablePageSize, sortF = sortField, sortO = sortOrder, origin = originFilter) => {
     try {
       setTableLoading(true);
+      setTablePending(true);
       setTableError('');
       // 서버 정렬된 페이지를 받아 화면 크기에 맞춰 자름
       const res = await getPopularMoviesSorted(page, sortF, sortO, origin);
@@ -375,6 +492,7 @@ const Popular = () => {
       setTableError(err.message || '테이블 데이터를 불러오지 못했습니다.');
     } finally {
       setTableLoading(false);
+      setTimeout(() => setTablePending(false), 1000); // 최소 1초 대기 화면
     }
   }, [sortField, sortOrder, originFilter, tablePageSize]);
 
@@ -406,8 +524,8 @@ const Popular = () => {
       const headerReserve = 320; // 헤더/컨트롤 여유 높이
       const rowHeight = 92; // 행 높이 추정 (포스터 68 + 패딩 등)
       const available = Math.max(200, viewportH - headerReserve);
-      const size = Math.max(5, Math.min(12, Math.floor(available / rowHeight)));
-      setTablePageSize(size);
+      const size = Math.max(2, Math.floor(available / rowHeight));
+      setTablePageSize(Math.min(4, size || 4)); // 최대 4개로 제한
     };
     calcPageSize();
     window.addEventListener('resize', calcPageSize);
@@ -443,6 +561,24 @@ const Popular = () => {
     setTablePage(1);
   };
 
+  const handleMinRatingChange = (e) => {
+    setMinRating(Number(e.target.value));
+  };
+
+  const handleGenreClick = (genreId) => {
+    setSelectedGenres(prev => {
+      if (prev.includes(genreId)) {
+        return prev.filter(id => id !== genreId);
+      }
+      return [...prev, genreId];
+    });
+  };
+
+  // 그리드 정렬/필터 변경 시 데이터 리셋
+  useEffect(() => {
+    refresh();
+  }, [sortField, sortOrder, originFilter, refresh]);
+
   const handleMovieClick = (movie) => {
     console.log('Movie clicked:', movie);
     // TODO: 모달 또는 상세 페이지 연결
@@ -471,13 +607,13 @@ const Popular = () => {
                 $isActive={viewMode === VIEW_MODES.GRID}
                 onClick={() => setViewMode(VIEW_MODES.GRID)}
               >
-                🔲 그리드
+                무한 스크롤
               </ViewButton>
               <ViewButton 
                 $isActive={viewMode === VIEW_MODES.TABLE}
                 onClick={() => setViewMode(VIEW_MODES.TABLE)}
               >
-                📋 테이블
+                테이블
               </ViewButton>
             </ViewToggle>
 
@@ -496,20 +632,30 @@ const Popular = () => {
                 </option>
               ))}
             </Select>
-
-            <RefreshButton onClick={refresh} disabled={isLoading}>
-              새로고침
-            </RefreshButton>
           </LeftControls>
 
-          <RightControls>
-            {totalResults > 0 && (
-              <ResultInfo>
-                총 <span>{totalResults.toLocaleString()}</span>개의 영화
-              </ResultInfo>
-            )}
-          </RightControls>
         </ControlsContainer>
+
+        <PopularFilters
+          totalResults={totalResults}
+          minRating={minRating}
+          onMinRatingChange={handleMinRatingChange}
+          genres={genres}
+          selectedGenres={selectedGenres}
+          isGenreLoading={isGenreLoading}
+          onGenreToggle={handleGenreClick}
+          onRefresh={refresh}
+          onReset={() => {
+            setSortField('popularity');
+            setSortOrder('desc');
+            setOriginFilter('all');
+            setMinRating(0);
+            setSelectedGenres([]);
+            setTablePage(1);
+            refresh();
+          }}
+          isLoading={isLoading}
+        />
 
         {/* 에러 상태 */}
         {error && (
@@ -533,7 +679,7 @@ const Popular = () => {
           <>
             {viewMode === VIEW_MODES.GRID ? (
               <MovieGrid
-                movies={sortedMovies}
+                movies={filteredMovies}
                 isLoading={isLoading}
                 isLoadingMore={isLoadingMore}
                 hasMore={hasMore}
@@ -542,24 +688,23 @@ const Popular = () => {
                 emptyMessage="인기 영화가 없습니다."
               />
             ) : (
-              <MovieTable
-                movies={tableData}
-                onSort={handleSort}
-                sortField={sortField}
-                sortOrder={sortOrder}
-                onMovieClick={handleMovieClick}
-              />
-            )}
-            {viewMode === VIEW_MODES.GRID && hasMore && (
-              <LoadMoreWrapper>
-                <PageButton
-                  type="button"
-                  onClick={loadMore}
-                  disabled={isLoadingMore}
-                >
-                  {isLoadingMore ? '불러오는 중...' : '더 불러오기'}
-                </PageButton>
-              </LoadMoreWrapper>
+              <div style={{ position: 'relative' }}>
+                <MovieTable
+                  movies={tableData}
+                  onSort={handleSort}
+                  sortField={sortField}
+                  sortOrder={sortOrder}
+                  onMovieClick={handleMovieClick}
+                />
+                {tablePending && (
+                  <PendingOverlay>
+                    <PendingCard>
+                      <PendingDot />
+                      다음 페이지 불러오는 중...
+                    </PendingCard>
+                  </PendingOverlay>
+                )}
+              </div>
             )}
             {viewMode === VIEW_MODES.TABLE && tableError && (
               <LoadingContainer>

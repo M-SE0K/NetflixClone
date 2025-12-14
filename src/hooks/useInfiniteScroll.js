@@ -23,7 +23,6 @@ const useInfiniteScroll = (fetchFunction, options = {}) => {
   const [totalResults, setTotalResults] = useState(0);
 
   const observerRef = useRef(null);
-  const loadMoreRef = useRef(null);
 
   // 데이터 초기 로드
   const loadInitialData = useCallback(async () => {
@@ -75,9 +74,13 @@ const useInfiniteScroll = (fetchFunction, options = {}) => {
     loadInitialData();
   }, [loadInitialData, initialPage]);
 
-  // Intersection Observer 설정
-  useEffect(() => {
-    if (!enabled) return;
+  // Intersection Observer (callback ref 방식)
+  const loadMoreRef = useCallback((node) => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    if (!enabled || !node) return;
 
     const options = {
       root: null,
@@ -85,23 +88,16 @@ const useInfiniteScroll = (fetchFunction, options = {}) => {
       threshold: 0
     };
 
-    observerRef.current = new IntersectionObserver((entries) => {
+    const observer = new IntersectionObserver((entries) => {
       const [entry] = entries;
       if (entry.isIntersecting && hasMore && !isLoadingMore) {
         loadMore();
       }
     }, options);
 
-    if (loadMoreRef.current) {
-      observerRef.current.observe(loadMoreRef.current);
-    }
-
-    return () => {
-      if (observerRef.current) {
-        observerRef.current.disconnect();
-      }
-    };
-  }, [hasMore, isLoadingMore, loadMore, enabled]);
+    observer.observe(node);
+    observerRef.current = observer;
+  }, [enabled, hasMore, isLoadingMore, loadMore]);
 
   // 초기 데이터 로드
   useEffect(() => {

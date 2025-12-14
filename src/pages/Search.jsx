@@ -5,6 +5,7 @@ import MovieGrid from '../components/MovieGrid';
 import useDebounce from '../hooks/useDebounce';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
 import { searchMovies, getGenres, getMoviesByGenre, getMoviesByGenres, GENRE_IDS } from '../api/tmdb';
+import PopularFilters from '../components/PopularFilters';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -275,21 +276,6 @@ const SelectSmall = styled.select`
   }
 `;
 
-const ResetButton = styled.button`
-  padding: 8px 12px;
-  background: #e50914;
-  color: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 6px;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    background:rgb(255, 100, 100);
-    border-color:rgb(119, 22, 22);
-  }
-`;
-
 const ControlsGroup = styled.div`
   display: flex;
   flex-wrap: wrap;
@@ -498,24 +484,6 @@ const Search = () => {
             </SearchInputWrapper>
           </SearchForm>
 
-          <GenreFilterSection>
-            <GenreLabel>장르별 탐색 (여러 개 선택 가능)</GenreLabel>
-            <GenreList>
-              {isGenreLoading ? (
-                <LoadingText>장르 로딩 중...</LoadingText>
-              ) : (
-                genres.map(genre => (
-                  <GenreButton
-                    key={genre.id}
-                    $isActive={selectedGenres.includes(genre.id)}
-                    onClick={() => handleGenreClick(genre.id)}
-                  >
-                    {genre.name}
-                  </GenreButton>
-                ))
-              )}
-            </GenreList>
-          </GenreFilterSection>
         </SearchSection>
 
         <ResultsSection>
@@ -549,20 +517,23 @@ const Search = () => {
                   <option value="desc">내림차순</option>
                   <option value="asc">오름차순</option>
                 </SelectSmall>
-
-                <ControlLabel>최소 평점</ControlLabel>
-                <SelectSmall value={minRating} onChange={handleMinRatingChange}>
-                  <option value={0}>전체</option>
-                  <option value={6}>6.0+</option>
-                  <option value={7}>7.0+</option>
-                  <option value={8}>8.0+</option>
-                  <option value={8.5}>8.5+</option>
-                </SelectSmall>
               </ControlsGroup>
-              <ResetButton type="button" onClick={handleResetFilters}>
-                초기화
-              </ResetButton>
             </ControlsRow>
+          )}
+
+          {showResults && (
+            <PopularFilters
+              totalResults={totalResults}
+              minRating={minRating}
+              onMinRatingChange={(e) => setMinRating(Number(e.target.value))}
+              genres={genres}
+              selectedGenres={selectedGenres}
+              isGenreLoading={isGenreLoading}
+              onGenreToggle={handleGenreClick}
+              onRefresh={refresh}
+              onReset={handleResetFilters}
+              isLoading={isLoading}
+            />
           )}
 
           {/* 초기 상태 - 검색어/장르 없음 */}
@@ -589,9 +560,20 @@ const Search = () => {
           {error && (
             <LoadingContainer>
               <LoadingText>오류가 발생했습니다: {error}</LoadingText>
-              <ResetButton type="button" onClick={handleResetFilters}>
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                style={{
+                  padding: '8px 12px',
+                  background: '#e50914',
+                  color: '#fff',
+                  border: '1px solid rgba(255, 255, 255, 0.15)',
+                  borderRadius: '6px',
+                  cursor: 'pointer'
+                }}
+              >
                 다시 시도
-              </ResetButton>
+              </button>
             </LoadingContainer>
           )}
 

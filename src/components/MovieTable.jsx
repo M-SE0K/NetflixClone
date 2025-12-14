@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { getImageUrl } from '../api/tmdb';
 import { useWishlist } from '../hooks/useWishlist.jsx';
+import MovieDetailModal from './MovieDetailModal';
 
 const TableContainer = styled.div`
   width: 100%;
@@ -61,44 +62,65 @@ const SortIcon = styled.span`
 
 const TableBody = styled.tbody``;
 
+const shuffleIn = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98) rotate(-1deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.01) rotate(1.2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+`;
+
 const TableRow = styled.tr`
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: background 0.2s;
-  
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  animation: ${shuffleIn} 0.45s ease forwards;
+  animation-delay: ${props => props.$delay || 0}ms;
+  opacity: 0;
+  min-height: 150px;
+
   &:hover {
     background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(0,0,0,0.25);
   }
 `;
 
 const TableCell = styled.td`
-  padding: 12px;
+  padding: 16px 14px;
   color: #e5e5e5;
   font-size: 14px;
   vertical-align: middle;
 `;
 
 const PosterCell = styled(TableCell)`
-  width: 60px;
-  padding: 8px 12px;
+  width: 150px;
+  padding: 10px 14px;
 `;
 
 const PosterImage = styled.img`
-  width: 45px;
-  height: 68px;
+  width: 250px;
+  height: 200px;
   object-fit: cover;
-  border-radius: 4px;
+  border-radius: 6px;
   background: #333;
 `;
 
 const PosterPlaceholder = styled.div`
-  width: 45px;
-  height: 68px;
+  width: 72px;
+  height: 108px;
   background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
-  border-radius: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
+  font-size: 20px;
 `;
 
 const TitleCell = styled(TableCell)`
@@ -187,6 +209,7 @@ const MovieTable = ({
 }) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
   const [imageErrors, setImageErrors] = useState({});
+  const [selectedMovie, setSelectedMovie] = useState(null);
 
   const handleSort = (field) => {
     if (onSort) {
@@ -242,7 +265,15 @@ const MovieTable = ({
             const releaseYear = movie.release_date?.split('-')[0] || '-';
 
             return (
-              <TableRow key={`${movie.id}-${index}`}>
+              <TableRow 
+                key={`${movie.id}-${index}`} 
+                $delay={Math.min(index * 30, 250)}
+                onClick={() => {
+                  setSelectedMovie(movie);
+                  onMovieClick?.(movie);
+                }}
+                style={{ cursor: 'pointer' }}
+              >
                 <PosterCell>
                   {posterUrl && !imageErrors[movie.id] ? (
                     <PosterImage 
@@ -250,13 +281,19 @@ const MovieTable = ({
                       alt={movie.title}
                       loading="lazy"
                       onError={() => handleImageError(movie.id)}
+                      onClick={(e) => { e.stopPropagation(); setSelectedMovie(movie); }}
                     />
                   ) : (
-                    <PosterPlaceholder>🎬</PosterPlaceholder>
+                    <PosterPlaceholder onClick={(e) => { e.stopPropagation(); setSelectedMovie(movie); }}>
+                      🎬
+                    </PosterPlaceholder>
                   )}
                 </PosterCell>
                 
-                <TitleCell onClick={() => onMovieClick?.(movie)} style={{ cursor: 'pointer' }}>
+                <TitleCell 
+                  onClick={(e) => { e.stopPropagation(); setSelectedMovie(movie); onMovieClick?.(movie); }} 
+                  style={{ cursor: 'pointer' }}
+                >
                   <MovieTitle>{movie.title}</MovieTitle>
                   <MovieOverview>{movie.overview || '줄거리 정보 없음'}</MovieOverview>
                 </TitleCell>
@@ -294,6 +331,9 @@ const MovieTable = ({
           })}
         </TableBody>
       </Table>
+      {selectedMovie && (
+        <MovieDetailModal movie={selectedMovie} onClose={() => setSelectedMovie(null)} />
+      )}
     </TableContainer>
   );
 };

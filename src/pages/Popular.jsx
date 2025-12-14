@@ -235,17 +235,20 @@ const LoadingContainer = styled.div`
 `;
 
 const LoadingSpinner = styled.div`
-  width: 50px;
-  height: 50px;
-  border: 3px solid rgba(229, 9, 20, 0.3);
+  width: 64px;
+  height: 64px;
   border-radius: 50%;
-  border-top-color: #e50914;
+  background: conic-gradient(from 90deg, rgba(229, 9, 20, 0.9), rgba(255, 255, 255, 0.1), rgba(229, 9, 20, 0.9));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 8px));
   animation: ${spin} 1s linear infinite;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.35);
 `;
 
 const LoadingText = styled.p`
   color: #888;
   font-size: 14px;
+  letter-spacing: 0.4px;
+  animation: ${pulse} 1.5s ease-in-out infinite;
 `;
 
 const PendingOverlay = styled.div`
@@ -513,13 +516,13 @@ const Popular = () => {
                 $isActive={viewMode === VIEW_MODES.GRID}
                 onClick={() => setViewMode(VIEW_MODES.GRID)}
               >
-                🔲 그리드
+                무한 스크롤
               </ViewButton>
               <ViewButton 
                 $isActive={viewMode === VIEW_MODES.TABLE}
                 onClick={() => setViewMode(VIEW_MODES.TABLE)}
               >
-                📋 테이블
+                테이블
               </ViewButton>
             </ViewToggle>
 

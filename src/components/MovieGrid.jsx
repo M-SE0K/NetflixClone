@@ -1,14 +1,18 @@
 import styled, { keyframes } from 'styled-components';
 import MovieCard from './MovieCard';
 
-const fadeIn = keyframes`
-  from {
+const shuffleIn = keyframes`
+  0% {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(18px) scale(0.96) rotate(-2deg);
   }
-  to {
+  60% {
     opacity: 1;
-    transform: translateY(0);
+    transform: translateY(-6px) scale(1.02) rotate(1.5deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
   }
 `;
 
@@ -30,9 +34,16 @@ const GridContainer = styled.div`
 `;
 
 const GridItem = styled.div`
-  animation: ${fadeIn} 0.4s ease forwards;
+  animation: ${shuffleIn} 0.5s ease forwards;
   animation-delay: ${props => props.$delay}ms;
   opacity: 0;
+  transform-origin: center;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+
+  &:hover {
+    transform: translateY(-8px) scale(1.02) rotate(${props => (props.$tilt ?? 0) * -0.35}deg);
+    box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+  }
 `;
 
 const LoadingContainer = styled.div`
@@ -122,6 +133,7 @@ const MovieGrid = ({
         <GridItem 
           key={`${movie.id}-${index}`} 
           $delay={Math.min(index * 30, 300)}
+          $tilt={(index % 7) - 3}
         >
           <MovieCard 
             movie={movie} 

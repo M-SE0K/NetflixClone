@@ -44,7 +44,9 @@ const LoadingContainer = styled.div`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #141414;
+  background: radial-gradient(circle at 20% 20%, rgba(229, 9, 20, 0.08), transparent 35%),
+              radial-gradient(circle at 80% 10%, rgba(109, 109, 110, 0.08), transparent 35%),
+              #0f0f0f;
   gap: 20px;
 `;
 
@@ -59,18 +61,20 @@ const pulse = keyframes`
 `;
 
 const LoadingSpinner = styled.div`
-  width: 50px;
-  height: 50px;
-  border: 3px solid rgba(229, 9, 20, 0.3);
+  width: 72px;
+  height: 72px;
   border-radius: 50%;
-  border-top-color: #e50914;
+  background: conic-gradient(from 90deg, rgba(229, 9, 20, 0.9), rgba(255, 255, 255, 0.1), rgba(229, 9, 20, 0.9));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 10px), #000 calc(100% - 8px));
   animation: ${spin} 1s linear infinite;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.35);
 `;
 
 const LoadingText = styled.p`
   color: #fff;
   font-size: 16px;
   animation: ${pulse} 1.5s ease-in-out infinite;
+  letter-spacing: 0.5px;
 `;
 
 const ErrorContainer = styled.div`

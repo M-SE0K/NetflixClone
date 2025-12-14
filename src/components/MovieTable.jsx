@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import styled from 'styled-components';
+import styled, { keyframes } from 'styled-components';
 import { getImageUrl } from '../api/tmdb';
 import { useWishlist } from '../hooks/useWishlist.jsx';
 
@@ -61,12 +61,32 @@ const SortIcon = styled.span`
 
 const TableBody = styled.tbody``;
 
+const shuffleIn = keyframes`
+  0% {
+    opacity: 0;
+    transform: translateY(14px) scale(0.98) rotate(-1deg);
+  }
+  60% {
+    opacity: 1;
+    transform: translateY(-4px) scale(1.01) rotate(1.2deg);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+`;
+
 const TableRow = styled.tr`
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  transition: background 0.2s;
-  
+  transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
+  animation: ${shuffleIn} 0.45s ease forwards;
+  animation-delay: ${props => props.$delay || 0}ms;
+  opacity: 0;
+
   &:hover {
     background: rgba(255, 255, 255, 0.05);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 26px rgba(0,0,0,0.25);
   }
 `;
 
@@ -242,7 +262,7 @@ const MovieTable = ({
             const releaseYear = movie.release_date?.split('-')[0] || '-';
 
             return (
-              <TableRow key={`${movie.id}-${index}`}>
+              <TableRow key={`${movie.id}-${index}`} $delay={Math.min(index * 30, 250)}>
                 <PosterCell>
                   {posterUrl && !imageErrors[movie.id] ? (
                     <PosterImage 

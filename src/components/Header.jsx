@@ -345,7 +345,10 @@ const Header = () => {
             )}
           </WishlistButton>
 
-          <UserMenu>
+          <UserMenu
+            onMouseEnter={() => setIsDropdownOpen(true)}
+            onMouseLeave={() => setIsDropdownOpen(false)}
+          >
             <UserButton onClick={() => setIsDropdownOpen(!isDropdownOpen)}>
               <UserAvatar>
                 {user?.email?.[0]?.toUpperCase() || 'U'}

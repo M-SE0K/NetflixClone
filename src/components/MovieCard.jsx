@@ -410,17 +410,12 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
               )}
               <DetailBody>
                 <DetailTitle>{movie.title}</DetailTitle>
-                <DetailMeta>
-                  <span>⭐ {rating}</span>
-                  <span>·</span>
-                  <span>{releaseYear}</span>
-                </DetailMeta>
                 <PillRow>
                   <Pill $type="rating">⭐ {rating}</Pill>
-                  <Pill>🗓 {releaseYear || '미정'}</Pill>
                   <Pill $type="pop">🔥 {popularity}</Pill>
-                  <Pill>🗣 {language || 'N/A'}</Pill>
-                  <Pill>🗳 {voteCount}</Pill>
+                  <Pill>{releaseYear || '미정'}</Pill>
+                  <Pill>{language || 'N/A'}</Pill>
+                  <Pill>{voteCount}</Pill>
                 </PillRow>
 
                 <DetailOverview>{movie.overview || '줄거리 정보가 없습니다.'}</DetailOverview>

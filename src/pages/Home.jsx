@@ -1,4 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { nextBanner, resetBanner } from '../store';
 import styled, { keyframes } from 'styled-components';
 import Header from '../components/Header';
 import Banner from '../components/Banner';
@@ -114,9 +116,10 @@ const RetryButton = styled.button`
 
 const Home = () => {
   const [movieData, setMovieData] = useState(null);
-  const [bannerIndex, setBannerIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const bannerIndex = useSelector(state => state.ui.bannerIndex);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -125,7 +128,7 @@ const Home = () => {
     try {
       const data = await getHomePageData();
       setMovieData(data);
-      setBannerIndex(0);
+      dispatch(resetBanner());
     } catch (err) {
       console.error('Failed to fetch home page data:', err);
       setError('영화 데이터를 불러오는데 실패했습니다.');
@@ -143,10 +146,10 @@ const Home = () => {
   useEffect(() => {
     if (!bannerCandidates.length) return;
     const interval = setInterval(() => {
-      setBannerIndex((idx) => (idx + 1) % bannerCandidates.length);
+      dispatch(nextBanner(bannerCandidates.length));
     }, 10000);
     return () => clearInterval(interval);
-  }, [bannerCandidates]);
+  }, [bannerCandidates, dispatch]);
 
   const bannerMovie = bannerCandidates[bannerIndex];
 

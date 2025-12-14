@@ -42,6 +42,22 @@ const twinkle = keyframes`
   100% { opacity: 0.3; transform: scale(0.9); }
 `;
 
+const galaxyDrift = keyframes`
+  0% { background-position: 0% 0%, 0% 0%, 0% 0%, 50% 50%; }
+  50% { background-position: 40% 28%, 24% 50%, 64% 55%, 58% 58%; }
+  100% { background-position: 80% 62%, 48% 96%, 4% 80%, 62% 62%; }
+`;
+
+const starTwinkle = keyframes`
+  0%, 100% { opacity: 0.65; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.08); }
+`;
+
+const starFieldMove = keyframes`
+  0% { background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px; }
+  100% { background-position: 520px 360px, -420px 300px, 340px 520px, -260px 440px, 420px 240px, -320px 340px; }
+`;
+
 // 폼 전환용 모션 variants
 const formVariants = {
   initial: (isLogin) => ({
@@ -86,14 +102,52 @@ const Container = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  background: radial-gradient(circle at 20% 20%, rgba(229, 9, 20, 0.14), transparent 28%),
-    radial-gradient(circle at 80% 10%, rgba(109, 109, 110, 0.2), transparent 30%),
-    radial-gradient(circle at 60% 70%, rgba(229, 9, 20, 0.12), transparent 28%),
-    linear-gradient(135deg, #0f0f0f 0%, #161616 35%, #0c0c0c 100%),
-    url('https://assets.nflxext.com/ffe/siteui/vlv3/a56dc29b-a0ec-4f6f-85fb-50df0680f80f/2f8ae902-8efe-49bb-9a91-51b6fcc8bf46/KR-ko-20240617-popsignuptwoweeks-perspective_alpha_website_large.jpg');
-  background-size: cover;
-  background-position: center;
   padding: clamp(18px, 3vw, 40px);
+  position: relative;
+  overflow: hidden;
+  background: radial-gradient(120% 80% at 10% 20%, rgba(229, 9, 20, 0.2), transparent 40%),
+    radial-gradient(140% 120% at 80% 15%, rgba(109, 30, 36, 0.18), transparent 42%),
+    linear-gradient(135deg, #030304 0%, #09080d 40%, #050406 100%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -15%;
+    background:
+      radial-gradient(circle at 25% 35%, rgba(229, 9, 20, 0.28), transparent 32%),
+      radial-gradient(circle at 75% 25%, rgba(255, 255, 255, 0.12), transparent 30%),
+      radial-gradient(circle at 60% 75%, rgba(229, 9, 20, 0.18), transparent 32%),
+      radial-gradient(circle at 30% 35%, rgba(229, 9, 20, 0.28), transparent 32%),
+      radial-gradient(circle at 80% 85%, rgba(229, 9, 20, 0.28), transparent 32%),
+      linear-gradient(160deg, rgba(10, 10, 12, 0.9), rgba(6, 6, 8, 0.7));
+    background-size: 140% 140%, 120% 120%, 120% 120%, 100% 100%;
+    animation: ${galaxyDrift} 5s ease-in-out infinite alternate;
+    filter: blur(6px);
+    opacity: 0.9;
+    transform: scale(1.05);
+    will-change: transform, background-position;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.8), transparent),
+      radial-gradient(1.2px 1.2px at 30% 40%, rgba(255,255,255,0.6), transparent),
+      radial-gradient(1px 1px at 50% 25%, rgba(255,255,255,0.75), transparent),
+      radial-gradient(1.3px 1.3px at 75% 65%, rgba(255,255,255,0.7), transparent),
+      radial-gradient(0.9px 0.9px at 85% 30%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 20% 75%, rgba(255,255,255,0.65), transparent);
+      radial-gradient(1px 1px at 20% 75%, rgba(255,255,255,0.65), transparent), 
+      radial-gradient(1px 1px at 20% 75%, rgba(255,255,255,0.65), transparent), 
+    background-repeat: no-repeat;
+    animation: ${starTwinkle} 5s ease-in-out infinite alternate, ${starFieldMove} 10s linear infinite;
+    mix-blend-mode: screen;
+    opacity: 0.9;
+    pointer-events: none;
+    will-change: background-position, opacity, transform;
+  }
 `;
 
 const Stage = styled.div`
@@ -131,7 +185,7 @@ const SlidePanel = styled(motion.div)`
   border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 34px rgba(0, 0, 0, 0.35);
-  margin: 0;
+  margin: 40px 0px 40px 0px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
   overflow: hidden;
   display: flex;

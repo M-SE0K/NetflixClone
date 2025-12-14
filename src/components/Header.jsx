@@ -17,9 +17,12 @@ const HeaderContainer = styled.header`
   align-items: center;
   justify-content: space-between;
   background: ${props => props.$isScrolled 
-    ? 'rgba(20, 20, 20, 0.95)' 
-    : 'linear-gradient(180deg, rgba(0,0,0,0.7) 10%, transparent)'};
-  transition: background 0.3s ease;
+    ? 'rgba(12, 12, 12, 0.9)' 
+    : 'linear-gradient(180deg, rgba(0,0,0,0.72) 0%, rgba(0,0,0,0.25) 100%)'};
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: ${props => props.$isScrolled ? '0 12px 40px rgba(0,0,0,0.35)' : 'none'};
+  backdrop-filter: blur(10px);
+  transition: background 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
 
   @media (max-width: 768px) {
     padding: 0 3%;
@@ -34,6 +37,12 @@ const Logo = styled(Link)`
   color: #e50914;
   letter-spacing: 2px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  transition: transform 0.2s ease, text-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-1px) scale(1.02);
+    text-shadow: 0 6px 20px rgba(229, 9, 20, 0.35);
+  }
 
   @media (max-width: 768px) {
     font-size: 1.5rem;
@@ -56,9 +65,28 @@ const NavLink = styled(Link)`
   font-size: 14px;
   font-weight: ${props => props.$isActive ? '600' : '400'};
   transition: color 0.2s;
+  position: relative;
+  padding-bottom: 4px;
 
   &:hover {
     color: #fff;
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    height: 2px;
+    width: 100%;
+    transform: scaleX(${props => props.$isActive ? 1 : 0});
+    transform-origin: left;
+    background: linear-gradient(90deg, #e50914, #ff6b6b);
+    transition: transform 0.25s ease;
+  }
+
+  &:hover::after {
+    transform: scaleX(1);
   }
 `;
 
@@ -69,8 +97,8 @@ const RightSection = styled.div`
 `;
 
 const IconButton = styled.button`
-  background: none;
-  border: 1px solid rgba(255,255,255,0.2);
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.18);
   color: #fff;
   font-size: 18px;
   cursor: pointer;
@@ -78,20 +106,21 @@ const IconButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  transition: transform 0.2s, background 0.2s, border-color 0.2s;
+  border-radius: 12px;
+  transition: transform 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
 
   &:hover {
-    transform: scale(1.06);
-    background: rgba(255,255,255,0.08);
+    transform: translateY(-1px) scale(1.06);
+    background: rgba(255,255,255,0.12);
     border-color: rgba(255,255,255,0.35);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   }
 `;
 
 const WishlistButton = styled(Link)`
   position: relative;
-  background: none;
-  border: 1px solid rgba(255,255,255,0.2);
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  border: 1px solid rgba(255,255,255,0.18);
   color: #fff;
   font-size: 18px;
   cursor: pointer;
@@ -99,13 +128,14 @@ const WishlistButton = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px;
-  transition: transform 0.2s, background 0.2s, border-color 0.2s;
+  border-radius: 12px;
+  transition: transform 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
 
   &:hover {
-    transform: scale(1.06);
-    background: rgba(255,255,255,0.08);
+    transform: translateY(-1px) scale(1.06);
+    background: rgba(255,255,255,0.12);
     border-color: rgba(255,255,255,0.35);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   }
 `;
 
@@ -168,15 +198,17 @@ const Dropdown = styled.div`
   top: 100%;
   right: 0;
   margin-top: 8px;
-  background: rgba(20, 20, 20, 0.95);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
+  background: rgba(12, 12, 12, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
   min-width: 150px;
   padding: 8px 0;
   opacity: ${props => props.$isOpen ? 1 : 0};
   visibility: ${props => props.$isOpen ? 'visible' : 'hidden'};
   transform: ${props => props.$isOpen ? 'translateY(0)' : 'translateY(-10px)'};
   transition: all 0.2s ease;
+  box-shadow: 0 14px 40px rgba(0,0,0,0.4);
+  backdrop-filter: blur(6px);
 `;
 
 const DropdownItem = styled.button`
@@ -204,13 +236,15 @@ const MobileMenuButton = styled.button`
   font-size: 20px;
   cursor: pointer;
   padding: 8px;
-  border-radius: 10px;
-  transition: transform 0.2s, background 0.2s, border-color 0.2s;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  transition: transform 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
 
   &:hover {
-    transform: scale(1.06);
-    background: rgba(255,255,255,0.08);
+    transform: translateY(-1px) scale(1.06);
+    background: rgba(255,255,255,0.12);
     border-color: rgba(255,255,255,0.35);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   }
 
   @media (max-width: 768px) {

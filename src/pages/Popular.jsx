@@ -74,6 +74,7 @@ const RightControls = styled.div`
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  margin-left: auto;
 `;
 
 const ViewToggle = styled.div`
@@ -139,7 +140,32 @@ const RefreshButton = styled.button`
   align-items: center;
   gap: 6px;
   padding: 10px 16px;
-  background: transparent;
+  background-color: ;
+  background: #e50914;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s; 
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: #e50914;
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+`;
+
+const ResetButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 16px;
+  background: #e50914;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
   color: #fff;
@@ -150,11 +176,6 @@ const RefreshButton = styled.button`
   &:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: #e50914;
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
   }
 `;
 
@@ -655,10 +676,6 @@ const Popular = () => {
                 </option>
               ))}
             </Select>
-
-            <RefreshButton onClick={refresh} disabled={isLoading}>
-              새로고침
-            </RefreshButton>
           </LeftControls>
 
           <RightControls>
@@ -667,6 +684,23 @@ const Popular = () => {
                 총 <span>{totalResults.toLocaleString()}</span>개의 영화
               </ResultInfo>
             )}
+            <RefreshButton onClick={refresh} disabled={isLoading}>
+              새로고침
+            </RefreshButton>
+            <ResetButton
+              type="button"
+              onClick={() => {
+                setSortField('popularity');
+                setSortOrder('desc');
+                setOriginFilter('all');
+                setMinRating(0);
+                setSelectedGenres([]);
+                setTablePage(1);
+                refresh();
+              }}
+            >
+              초기화
+            </ResetButton>
           </RightControls>
         </ControlsContainer>
 

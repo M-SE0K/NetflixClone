@@ -62,36 +62,28 @@ const starFieldMove = keyframes`
 const formVariants = {
   initial: (isLogin) => ({
     opacity: 0,
-    x: isLogin ? 110 : -110,
-    scale: 0.92,
-    rotateY: isLogin ? 14 : -14,
-    rotateZ: isLogin ? 2 : -2,
-    filter: 'blur(5px)'
+    y: 12,
+    scale: 0.99,
+    filter: 'blur(2px)'
   }),
   animate: {
     opacity: 1,
-    x: 0,
+    y: 0,
     scale: 1,
-    rotateY: 0,
-    rotateZ: 0,
     filter: 'blur(0px)',
     transition: {
-      type: 'spring',
-      stiffness: 220,
-      damping: 20,
-      mass: 0.85,
+      duration: 0.45,
+      ease: [0.25, 0.1, 0.25, 1],
     }
   },
   exit: (isLogin) => ({
     opacity: 0,
-    x: isLogin ? -110 : 110,
-    scale: 0.9,
-    rotateY: isLogin ? -14 : 14,
-    rotateZ: isLogin ? -2 : 2,
-    filter: 'blur(8px)',
+    y: isLogin ? -12 : 12,
+    scale: 0.99,
+    filter: 'blur(2px)',
     transition: {
-      duration: 0.5,
-      ease: [0.45, 0, 0.55, 1]
+      duration: 0.35,
+      ease: [0.4, 0, 0.6, 1]
     }
   })
 };
@@ -1032,14 +1024,12 @@ const SignIn = () => {
 
                   {!isLoginMode && (
                     <motion.div
-                      initial={{ opacity: 0, x: 40, scale: 0.96, rotateY: -8, filter: 'blur(4px)' }}
-                      animate={{ opacity: 1, x: 0, scale: 1, rotateY: 0, filter: 'blur(0px)' }}
-                      exit={{ opacity: 0, x: -40, scale: 0.94, rotateY: 8, filter: 'blur(6px)' }}
+                  initial={{ opacity: 0, y: 12, scale: 0.99, filter: 'blur(2px)' }}
+                  animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+                  exit={{ opacity: 0, y: -12, scale: 0.99, filter: 'blur(2px)' }}
                       transition={{
-                        type: 'spring',
-                        stiffness: 180,
-                        damping: 20,
-                        mass: 0.9
+                    duration: 0.35,
+                    ease: [0.25, 0.1, 0.25, 1]
                       }}
                     >
                       <InputGroup>

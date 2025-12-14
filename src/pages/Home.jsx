@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { nextBanner, resetBanner } from '../store';
 import styled, { keyframes } from 'styled-components';
 import Header from '../components/Header';
 import Banner from '../components/Banner';
 import MovieRow from '../components/MovieRow';
-import { getHomePageData } from '../api/tmdb';
+import { getHomePageData, getImageUrl } from '../api/tmdb';
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -12,7 +14,9 @@ const fadeIn = keyframes`
 
 const PageContainer = styled.div`
   min-height: 100vh;
-  background: #141414;
+  background: radial-gradient(circle at 20% 20%, rgba(229, 9, 20, 0.08), transparent 30%),
+              radial-gradient(circle at 80% 10%, rgba(109, 109, 110, 0.08), transparent 30%),
+              #0f0f0f;
   animation: ${fadeIn} 0.5s ease;
 `;
 
@@ -29,6 +33,9 @@ const MainContent = styled.main`
 const RowsContainer = styled.div`
   position: relative;
   z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
 `;
 
 const LoadingContainer = styled.div`
@@ -112,11 +119,120 @@ const RetryButton = styled.button`
   }
 `;
 
+const HeroSpacer = styled.div`
+  margin-bottom: 18px;
+`;
+
+const GlassSection = styled.section`
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 16px;
+  padding: 18px 18px 6px;
+  margin: 0 4% 28px;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(8px);
+
+  @media (max-width: 768px) {
+    margin: 0 3% 20px;
+    padding: 14px 14px 2px;
+  }
+`;
+
+const SectionHeader = styled.div`
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 0 6px;
+`;
+
+const SectionTitle = styled.h2`
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 800;
+  margin: 0;
+`;
+
+const SectionSubtitle = styled.span`
+  color: #b3b3b3;
+  font-size: 0.95rem;
+`;
+
+const HighlightGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+`;
+
+const HighlightCard = styled.div`
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(34,34,34,0.9), rgba(20,20,20,0.9));
+  border: 1px solid rgba(255,255,255,0.06);
+  min-height: 130px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  display: grid;
+  grid-template-columns: 1fr 1.1fr;
+
+  @media (max-width: 520px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
+const HighlightThumb = styled.div`
+  background-image: ${({ $image }) => `url(${$image || ''})`};
+  background-size: cover;
+  background-position: center;
+  filter: saturate(1.1);
+  min-height: 120px;
+`;
+
+const HighlightBody = styled.div`
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+`;
+
+const HighlightLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(229, 9, 20, 0.14);
+  color: #ff7171;
+  font-size: 12px;
+  font-weight: 700;
+  width: fit-content;
+`;
+
+const HighlightTitle = styled.h3`
+  margin: 0;
+  color: #fff;
+  font-size: 1rem;
+  line-height: 1.3;
+`;
+
+const HighlightMeta = styled.div`
+  display: flex;
+  gap: 10px;
+  color: #cfcfcf;
+  font-size: 12px;
+  flex-wrap: wrap;
+`;
+
+const Dot = styled.span`
+  color: #555;
+`;
+
 const Home = () => {
   const [movieData, setMovieData] = useState(null);
-  const [bannerIndex, setBannerIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const dispatch = useDispatch();
+  const bannerIndex = useSelector(state => state.ui.bannerIndex);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -125,7 +241,7 @@ const Home = () => {
     try {
       const data = await getHomePageData();
       setMovieData(data);
-      setBannerIndex(0);
+      dispatch(resetBanner());
     } catch (err) {
       console.error('Failed to fetch home page data:', err);
       setError('영화 데이터를 불러오는데 실패했습니다.');
@@ -143,10 +259,10 @@ const Home = () => {
   useEffect(() => {
     if (!bannerCandidates.length) return;
     const interval = setInterval(() => {
-      setBannerIndex((idx) => (idx + 1) % bannerCandidates.length);
+      dispatch(nextBanner(bannerCandidates.length));
     }, 10000);
     return () => clearInterval(interval);
-  }, [bannerCandidates]);
+  }, [bannerCandidates, dispatch]);
 
   const bannerMovie = bannerCandidates[bannerIndex];
 
@@ -158,6 +274,25 @@ const Home = () => {
     // TODO: 영화 상세 모달 또는 페이지 구현
     console.log('Movie clicked:', movie);
   };
+
+  const getHomeThumb = (m) => {
+    if (!m) return '';
+    return getImageUrl(m.backdrop_path, 'backdrop', 'large') 
+        || getImageUrl(m.poster_path, 'poster', 'large')
+        || '';
+  };
+
+  const highlightItems = useMemo(() => {
+    if (!movieData) return [];
+    return [
+      { label: '오늘의 트렌드', movie: movieData.trending?.[0] },
+      { label: '지금 상영', movie: movieData.nowPlaying?.[0] },
+      { label: '최고 평점', movie: movieData.topRated?.[0] },
+      { label: '곧 만나요', movie: movieData.upcoming?.[0] },
+      { label: '액션 한 스푼', movie: movieData.actionMovies?.[0] },
+      { label: '웃음 보장', movie: movieData.comedyMovies?.[0] },
+    ].filter(item => item.movie);
+  }, [movieData]);
 
   if (isLoading) {
     return (
@@ -186,7 +321,45 @@ const Home = () => {
       <Header />
       
       <MainContent>
-        <Banner movie={bannerMovie} />
+        <HeroSpacer>
+          <Banner movie={bannerMovie} />
+        </HeroSpacer>
+
+        <GlassSection>
+          <SectionHeader>
+            <SectionTitle>하이라이트 믹스</SectionTitle>
+            <SectionSubtitle>오늘의 무드에 어울리는 큐레이션</SectionSubtitle>
+          </SectionHeader>
+          <HighlightGrid>
+            {highlightItems.map((item, idx) => {
+              const backdrop = getHomeThumb(item.movie);
+              return (
+                <HighlightCard key={`${item.label}-${item.movie.id}-${idx}`}>
+                  <HighlightThumb $image={backdrop} />
+                  <HighlightBody>
+                    <HighlightLabel>{item.label}</HighlightLabel>
+                    <HighlightTitle>{item.movie.title}</HighlightTitle>
+                    <HighlightMeta>
+                      {item.movie.vote_average ? <span>⭐ {item.movie.vote_average.toFixed(1)}</span> : null}
+                      {item.movie.release_date ? (
+                        <>
+                          <Dot>•</Dot>
+                          <span>{item.movie.release_date.split('-')[0]}</span>
+                        </>
+                      ) : null}
+                      {item.movie.original_language ? (
+                        <>
+                          <Dot>•</Dot>
+                          <span>{(item.movie.original_language || '').toUpperCase()}</span>
+                        </>
+                      ) : null}
+                    </HighlightMeta>
+                  </HighlightBody>
+                </HighlightCard>
+              );
+            })}
+          </HighlightGrid>
+        </GlassSection>
         
         <RowsContainer>
           <MovieRow 
@@ -216,7 +389,7 @@ const Home = () => {
           />
           
           <MovieRow 
-            title="🎯 개봉 예정"
+            title="개봉 예정"
             movies={movieData.upcoming}
             onMovieClick={handleMovieClick}
           />

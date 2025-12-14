@@ -322,14 +322,19 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
     toggleWishlist(movie);
   };
 
+  const handlePosterClick = (e) => {
+    e.stopPropagation();
+    if (!isWishlisted) {
+      toggleWishlist(movie);
+    }
+  };
+
   const openDetail = () => setShowDetail(true);
   const closeDetail = () => setShowDetail(false);
 
   const handleCardClick = () => {
-    openDetail(); // 카드 어디를 눌러도 상세 표시
-    if (onCardClick) {
-      onCardClick(movie);
-    }
+    toggleWishlist(movie); // 카드 클릭 시 위시리스트 토글
+    if (onCardClick) onCardClick(movie);
   };
 
   const handleInfoClick = (e) => {
@@ -347,18 +352,12 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
           alt={movie.title}
           loading="lazy"
           onError={() => setImageError(true)}
-          onClick={(e) => {
-            e.stopPropagation();
-            openDetail();
-          }}
+          onClick={handlePosterClick}
           style={{ cursor: 'pointer' }}
         />
       ) : (
         <PosterPlaceholder
-          onClick={(e) => {
-            e.stopPropagation();
-            openDetail();
-          }}
+          onClick={handlePosterClick}
           style={{ cursor: 'pointer' }}
         >
           🎬

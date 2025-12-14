@@ -220,6 +220,11 @@ const spin = keyframes`
   100% { transform: rotate(360deg); }
 `;
 
+const pulse = keyframes`
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
+`;
+
 const LoadingContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -241,6 +246,40 @@ const LoadingSpinner = styled.div`
 const LoadingText = styled.p`
   color: #888;
   font-size: 14px;
+`;
+
+const PendingOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  z-index: 5;
+  pointer-events: none;
+`;
+
+const PendingCard = styled.div`
+  background: rgba(20, 20, 20, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 14px 16px;
+  color: #fff;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
+`;
+
+const PendingDot = styled.span`
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #e50914;
+  animation: ${pulse} 1s infinite;
 `;
 
 const ErrorContainer = styled.div`
@@ -312,6 +351,7 @@ const Popular = () => {
   const [tableTotalResults, setTableTotalResults] = useState(0);
   const [tableLoading, setTableLoading] = useState(false);
   const [tableError, setTableError] = useState('');
+  const [tablePending, setTablePending] = useState(false);
 
   // Infinite Scroll 훅 사용
   const {
@@ -364,6 +404,7 @@ const Popular = () => {
   const fetchTablePage = useCallback(async (page, pageSize = tablePageSize, sortF = sortField, sortO = sortOrder, origin = originFilter) => {
     try {
       setTableLoading(true);
+      setTablePending(true);
       setTableError('');
       // 서버 정렬된 페이지를 받아 화면 크기에 맞춰 자름
       const res = await getPopularMoviesSorted(page, sortF, sortO, origin);
@@ -375,6 +416,7 @@ const Popular = () => {
       setTableError(err.message || '테이블 데이터를 불러오지 못했습니다.');
     } finally {
       setTableLoading(false);
+      setTimeout(() => setTablePending(false), 1000); // 최소 1초 대기 화면
     }
   }, [sortField, sortOrder, originFilter, tablePageSize]);
 
@@ -542,13 +584,23 @@ const Popular = () => {
                 emptyMessage="인기 영화가 없습니다."
               />
             ) : (
-              <MovieTable
-                movies={tableData}
-                onSort={handleSort}
-                sortField={sortField}
-                sortOrder={sortOrder}
-                onMovieClick={handleMovieClick}
-              />
+              <div style={{ position: 'relative' }}>
+                <MovieTable
+                  movies={tableData}
+                  onSort={handleSort}
+                  sortField={sortField}
+                  sortOrder={sortOrder}
+                  onMovieClick={handleMovieClick}
+                />
+                {tablePending && (
+                  <PendingOverlay>
+                    <PendingCard>
+                      <PendingDot />
+                      다음 페이지 불러오는 중...
+                    </PendingCard>
+                  </PendingOverlay>
+                )}
+              </div>
             )}
             {viewMode === VIEW_MODES.TABLE && tableError && (
               <LoadingContainer>

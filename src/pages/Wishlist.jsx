@@ -392,7 +392,7 @@ const Wishlist = () => {
       
       <MainContent>
         <PageHeader>
-          <PageTitle>❤️ 내가 찜한 리스트</PageTitle>
+          <PageTitle>내가 찜한 리스트</PageTitle>
           <PageDescription>
             찜한 영화들을 한눈에 확인하세요
           </PageDescription>
@@ -405,13 +405,13 @@ const Wishlist = () => {
                 $isActive={viewMode === VIEW_MODES.GRID}
                 onClick={() => setViewMode(VIEW_MODES.GRID)}
               >
-                🔲 그리드
+                그리드
               </ViewButton>
               <ViewButton 
                 $isActive={viewMode === VIEW_MODES.TABLE}
                 onClick={() => setViewMode(VIEW_MODES.TABLE)}
               >
-                📋 테이블
+                테이블
               </ViewButton>
             </ViewToggle>
 
@@ -427,7 +427,7 @@ const Wishlist = () => {
               onClick={handleClearAll}
               disabled={wishlistCount === 0}
             >
-              🗑️ 전체 삭제
+              전체 삭제
             </ClearAllButton>
           </LeftControls>
 

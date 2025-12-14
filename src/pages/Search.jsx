@@ -484,24 +484,6 @@ const Search = () => {
             </SearchInputWrapper>
           </SearchForm>
 
-          <GenreFilterSection>
-            <GenreLabel>장르별 탐색 (여러 개 선택 가능)</GenreLabel>
-            <GenreList>
-              {isGenreLoading ? (
-                <LoadingText>장르 로딩 중...</LoadingText>
-              ) : (
-                genres.map(genre => (
-                  <GenreButton
-                    key={genre.id}
-                    $isActive={selectedGenres.includes(genre.id)}
-                    onClick={() => handleGenreClick(genre.id)}
-                  >
-                    {genre.name}
-                  </GenreButton>
-                ))
-              )}
-            </GenreList>
-          </GenreFilterSection>
         </SearchSection>
 
         <ResultsSection>

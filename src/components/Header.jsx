@@ -97,8 +97,7 @@ const RightSection = styled.div`
 `;
 
 const IconButton = styled.button`
-  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-  border: 1px solid rgba(255,255,255,0.18);
+  border: none;
   color: #fff;
   font-size: 18px;
   cursor: pointer;
@@ -112,15 +111,13 @@ const IconButton = styled.button`
   &:hover {
     transform: translateY(-1px) scale(1.06);
     background: rgba(255,255,255,0.12);
-    border-color: rgba(255,255,255,0.35);
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   }
 `;
 
 const WishlistButton = styled(Link)`
   position: relative;
-  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
-  border: 1px solid rgba(255,255,255,0.18);
+  border: none;
   color: #fff;
   font-size: 18px;
   cursor: pointer;
@@ -134,7 +131,6 @@ const WishlistButton = styled(Link)`
   &:hover {
     transform: translateY(-1px) scale(1.06);
     background: rgba(255,255,255,0.12);
-    border-color: rgba(255,255,255,0.35);
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
   }
 `;

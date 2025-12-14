@@ -219,7 +219,7 @@ const Home = () => {
           />
           
           <MovieRow 
-            title="🎯 개봉 예정"
+            title="개봉 예정"
             movies={movieData.upcoming}
             onMovieClick={handleMovieClick}
           />

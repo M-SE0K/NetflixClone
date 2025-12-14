@@ -180,14 +180,16 @@ const DetailOverlay = styled.div`
 `;
 
 const DetailContent = styled.div`
-  background: #111;
-  border-radius: 10px;
-  width: min(900px, 95vw);
+  background: linear-gradient(135deg, rgba(20,20,20,0.92), rgba(32,32,32,0.88));
+  border-radius: 16px;
+  width: min(960px, 95vw);
   display: grid;
-  grid-template-columns: 1fr 1.2fr;
+  grid-template-columns: 1fr 1.1fr;
   gap: 20px;
-  padding: 20px;
-  box-shadow: 0 16px 50px rgba(0, 0, 0, 0.5);
+  padding: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(10px);
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
@@ -209,9 +211,10 @@ const DetailBody = styled.div`
 `;
 
 const DetailTitle = styled.h3`
-  font-size: 1.6rem;
+  font-size: 1.8rem;
   font-weight: 700;
   margin: 0;
+  line-height: 1.2;
 `;
 
 const DetailMeta = styled.div`
@@ -220,6 +223,7 @@ const DetailMeta = styled.div`
   gap: 12px;
   color: #b3b3b3;
   font-size: 14px;
+  flex-wrap: wrap;
 `;
 
 const DetailOverview = styled.p`
@@ -231,11 +235,11 @@ const DetailOverview = styled.p`
 
 const CloseButton = styled.button`
   align-self: flex-end;
-  padding: 8px 14px;
+  padding: 10px 16px;
   background: #e50914;
   color: #fff;
   border: none;
-  border-radius: 4px;
+  border-radius: 999px;
   cursor: pointer;
   font-weight: 700;
   transition: background 0.2s;
@@ -247,7 +251,7 @@ const CloseButton = styled.button`
 
 const DetailActions = styled.div`
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
@@ -257,10 +261,10 @@ const LinkButton = styled.a`
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 12px;
-  background: #2c2c2c;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #2b2b2b, #1c1c1c);
   color: #fff;
-  border-radius: 4px;
+  border-radius: 999px;
   font-size: 13px;
   text-decoration: none;
   border: 1px solid rgba(255,255,255,0.1);
@@ -270,6 +274,28 @@ const LinkButton = styled.a`
     background: #3a3a3a;
     border-color: #e50914;
   }
+`;
+
+const PillRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const Pill = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  color: #f4f4f4;
+  background: ${props => props.$type === 'rating'
+    ? 'rgba(70, 211, 105, 0.18)'
+    : props.$type === 'pop'
+      ? 'rgba(229, 9, 20, 0.18)'
+      : 'rgba(255,255,255,0.08)'};
+  border: 1px solid rgba(255,255,255,0.08);
 `;
 
 const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
@@ -283,6 +309,9 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
   const isWishlisted = isInWishlist(movie.id);
   const releaseYear = movie.release_date?.split('-')[0] || '';
   const rating = movie.vote_average?.toFixed(1) || 'N/A';
+  const voteCount = movie.vote_count?.toLocaleString() || '-';
+  const popularity = movie.popularity ? Math.round(movie.popularity) : '-';
+  const language = (movie.original_language || '').toUpperCase();
   const encodedTitle = encodeURIComponent((movie.title || '').trim());
   // 나무위키 직접 페이지 경로 예: https://namu.wiki/w/주토피아
   const wikiUrl = `https://namu.wiki/w/${encodedTitle}`;
@@ -386,6 +415,14 @@ const MovieCard = ({ movie, isLarge = false, onCardClick }) => {
                   <span>·</span>
                   <span>{releaseYear}</span>
                 </DetailMeta>
+                <PillRow>
+                  <Pill $type="rating">⭐ {rating}</Pill>
+                  <Pill>🗓 {releaseYear || '미정'}</Pill>
+                  <Pill $type="pop">🔥 {popularity}</Pill>
+                  <Pill>🗣 {language || 'N/A'}</Pill>
+                  <Pill>🗳 {voteCount}</Pill>
+                </PillRow>
+
                 <DetailOverview>{movie.overview || '줄거리 정보가 없습니다.'}</DetailOverview>
               <DetailActions>
                   <LinkButton href={wikiUrl} target="_blank" rel="noopener noreferrer">

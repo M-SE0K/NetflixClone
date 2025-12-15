@@ -1,4 +1,4 @@
-# M-FLIX - Netflix-like Demo (Vite + React + TypeScript)
+# M-FLIX - Netflix-Clone (Vite + React + TypeScript)
 
 TMDB API를 활용한 넷플릭스 스타일 SPA 데모입니다. TypeScript 기반으로 타입 안정성을 갖추었으며, 인증, 위시리스트, 검색/필터, 인피니트 스크롤, 애니메이션, GitHub Pages 배포를 지원합니다.
 

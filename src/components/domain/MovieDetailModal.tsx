@@ -44,10 +44,17 @@ const DetailOverlay = styled.div`
   justify-content: center;
   z-index: 1000;
   padding: 20px;
+
+  @media (max-width: 768px) {
+    padding: 12px;
+    align-items: flex-start;
+    padding-top: 40px;
+    overflow-y: auto;
+  }
 `;
 
 const DetailContent = styled.div`
-  background: linear-gradient(135deg, rgba(20,20,20,0.92), rgba(32,32,32,0.88));
+  background: linear-gradient(135deg, rgba(20,20,20,0.98), rgba(32,32,32,0.95));
   border-radius: 16px;
   width: min(960px, 95vw);
   display: grid;
@@ -60,6 +67,12 @@ const DetailContent = styled.div`
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
+    width: 100%;
+    max-height: calc(100vh - 80px);
+    overflow-y: auto;
+    padding: 16px;
+    gap: 16px;
+    border-radius: 12px;
   }
 `;
 
@@ -68,6 +81,12 @@ const DetailPoster = styled.img`
   border-radius: 8px;
   object-fit: cover;
   background: #222;
+
+  @media (max-width: 768px) {
+    max-height: 280px;
+    object-fit: contain;
+    background: transparent;
+  }
 `;
 
 const DetailPosterPlaceholder = styled.div`
@@ -94,6 +113,10 @@ const DetailTitle = styled.h3`
   font-weight: 700;
   margin: 0;
   line-height: 1.2;
+
+  @media (max-width: 768px) {
+    font-size: 1.3rem;
+  }
 `;
 
 const PillRow = styled.div`
@@ -116,6 +139,12 @@ const Pill = styled.span<PillProps>`
       ? 'rgba(229, 9, 20, 0.18)'
       : 'rgba(255,255,255,0.08)'};
   border: 1px solid rgba(255,255,255,0.08);
+
+  @media (max-width: 768px) {
+    padding: 4px 8px;
+    font-size: 11px;
+    gap: 4px;
+  }
 `;
 
 const DetailOverview = styled.p`
@@ -123,6 +152,13 @@ const DetailOverview = styled.p`
   line-height: 1.6;
   font-size: 14px;
   margin: 0;
+
+  @media (max-width: 768px) {
+    font-size: 13px;
+    line-height: 1.5;
+    max-height: 120px;
+    overflow-y: auto;
+  }
 `;
 
 const DetailActions = styled.div`
@@ -150,6 +186,12 @@ const LinkButton = styled.a`
     background: #3a3a3a;
     border-color: #e50914;
   }
+
+  @media (max-width: 768px) {
+    padding: 8px 12px;
+    font-size: 12px;
+    gap: 4px;
+  }
 `;
 
 const IconButton = styled.button<IconButtonProps>`
@@ -170,6 +212,11 @@ const IconButton = styled.button<IconButtonProps>`
     border-color: #fff;
     transform: scale(1.08);
   }
+
+  @media (max-width: 768px) {
+    width: 36px;
+    height: 36px;
+  }
 `;
 
 const CloseButton = styled.button`
@@ -185,6 +232,11 @@ const CloseButton = styled.button`
 
   &:hover {
     background: #b20710;
+  }
+
+  @media (max-width: 768px) {
+    padding: 8px 12px;
+    font-size: 12px;
   }
 `;
 

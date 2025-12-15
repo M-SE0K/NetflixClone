@@ -328,7 +328,7 @@ const Header = () => {
     <>
       <HeaderContainer $isScrolled={isScrolled}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Logo to="/">NETFLEX</Logo>
+          <Logo to="/">M-FLIX</Logo>
           <Nav>
             {navItems.map(item => (
               <NavLink 

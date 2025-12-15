@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import styled, { keyframes } from 'styled-components';
 import Header from '../components/Header';
 import MovieGrid from '../components/MovieGrid';
@@ -327,6 +327,7 @@ const ControlsGroup = styled.div`
 `;
 
 const Search = () => {
+  const searchInputRef = useRef(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [recentSearches, setRecentSearches] = useState([]);
   const [selectedGenres, setSelectedGenres] = useState([]);
@@ -342,6 +343,11 @@ const Search = () => {
   // Debounce 적용 (500ms)
   const debouncedQuery = useDebounce(searchQuery, 500);
   
+  // 검색 인풋 자동 포커스
+  useEffect(() => {
+    searchInputRef.current?.focus();
+  }, []);
+
   // 최근 검색어 로드
   useEffect(() => {
     try {
@@ -454,6 +460,7 @@ const Search = () => {
 
   const handleClearSearch = () => {
     setSearchQuery('');
+    searchInputRef.current?.focus();
   };
 
   const handleGenreClick = (genreId) => {
@@ -480,6 +487,7 @@ const Search = () => {
     setSearchQuery(term);
     setSelectedGenres([]);
     setPresetLabel('');
+    searchInputRef.current?.focus();
   };
 
   const handleClearRecent = () => {
@@ -553,7 +561,7 @@ const Search = () => {
                 placeholder="영화 제목을 입력하세요..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                autoFocus
+                ref={searchInputRef}
               />
               <ClearButton 
                 type="button"

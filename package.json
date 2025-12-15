@@ -8,7 +8,9 @@
     "build": "vite build",
     "postbuild": "cp dist/index.html dist/404.html || true",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
+    "setup": "node scripts/setup.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
@@ -31,6 +33,7 @@
     "@eslint/js": "^9.39.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
+    "@types/styled-components": "^5.1.36",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.22",
     "eslint": "^9.39.1",
@@ -40,6 +43,7 @@
     "globals": "^16.5.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.18",
+    "typescript": "^5.9.3",
     "vite": "^7.2.4"
   }
 }

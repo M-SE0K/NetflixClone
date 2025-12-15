@@ -1,11 +1,11 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
-import Header from '../components/Header';
-import MovieTable from '../components/MovieTable';
-import MovieGrid from '../components/MovieGrid';
+import Header from '../components/common/Header';
+import MovieTable from '../components/domain/MovieTable';
+import MovieGrid from '../components/domain/MovieGrid';
 import useInfiniteScroll from '../hooks/useInfiniteScroll';
 import { getPopularMovies, getPopularMoviesSorted, getGenres } from '../api/tmdb';
-import PopularFilters from '../components/PopularFilters';
+import PopularFilters from '../components/domain/PopularFilters';
 
 const fadeIn = keyframes`
   from { opacity: 0; }

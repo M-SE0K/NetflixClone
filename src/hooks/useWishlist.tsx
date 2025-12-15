@@ -1,17 +1,22 @@
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 import { toast } from 'react-toastify';
+import type { Movie, WishlistContextType } from '../types';
 
 // Wishlist Context 생성
-const WishlistContext = createContext(null);
+const WishlistContext = createContext<WishlistContextType | null>(null);
 
 const STORAGE_KEY = 'movieWishlist';
+
+interface WishlistProviderProps {
+  children: ReactNode;
+}
 
 /**
  * Wishlist Provider 컴포넌트
  * 전역 위시리스트 상태 관리
  */
-export const WishlistProvider = ({ children }) => {
-  const [wishlist, setWishlist] = useState([]);
+export const WishlistProvider = ({ children }: WishlistProviderProps) => {
+  const [wishlist, setWishlist] = useState<Movie[]>([]);
 
   // 초기 로드 시 Local Storage에서 위시리스트 불러오기
   useEffect(() => {
@@ -34,14 +39,14 @@ export const WishlistProvider = ({ children }) => {
   /**
    * 영화가 위시리스트에 있는지 확인
    */
-  const isInWishlist = useCallback((movieId) => {
+  const isInWishlist = useCallback((movieId: number): boolean => {
     return wishlist.some((movie) => movie.id === movieId);
   }, [wishlist]);
 
   /**
    * 위시리스트에 영화 추가
    */
-  const addToWishlist = useCallback((movie) => {
+  const addToWishlist = useCallback((movie: Movie): void => {
     setWishlist((prev) => {
       // 이미 존재하면 추가하지 않음
       if (prev.some((m) => m.id === movie.id)) {
@@ -63,14 +68,14 @@ export const WishlistProvider = ({ children }) => {
   /**
    * 위시리스트에서 영화 제거
    */
-  const removeFromWishlist = useCallback((movieId) => {
+  const removeFromWishlist = useCallback((movieId: number): void => {
     setWishlist((prev) => prev.filter((movie) => movie.id !== movieId));
   }, []);
 
   /**
    * 위시리스트 토글 (추가/제거)
    */
-  const toggleWishlist = useCallback((movie) => {
+  const toggleWishlist = useCallback((movie: Movie): boolean => {
     if (isInWishlist(movie.id)) {
       removeFromWishlist(movie.id);
       return false; // 제거됨
@@ -84,11 +89,11 @@ export const WishlistProvider = ({ children }) => {
   /**
    * 위시리스트 전체 삭제
    */
-  const clearWishlist = useCallback(() => {
+  const clearWishlist = useCallback((): void => {
     setWishlist([]);
   }, []);
 
-  const value = {
+  const value: WishlistContextType = {
     wishlist,
     isInWishlist,
     addToWishlist,
@@ -108,7 +113,7 @@ export const WishlistProvider = ({ children }) => {
 /**
  * useWishlist 커스텀 훅
  */
-export const useWishlist = () => {
+export const useWishlist = (): WishlistContextType => {
   const context = useContext(WishlistContext);
   
   if (!context) {

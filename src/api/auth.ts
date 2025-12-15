@@ -3,26 +3,28 @@
  * Local Storage를 활용한 사용자 인증 관리
  */
 
+import type { AuthResult, User } from '../types';
+
 // Local Storage 키 상수
 const STORAGE_KEYS = {
   USERS: 'users',
   TMDB_KEY: 'TMDb-Key',
   CURRENT_USER: 'currentUser',
   REMEMBER_ME: 'rememberMe'
-};
+} as const;
 
 /**
  * 로그인 시도
- * @param {string} email - 사용자 이메일
- * @param {string} password - TMDB API Key
- * @param {boolean} rememberMe - 로그인 상태 유지 여부
- * @returns {Promise<{success: boolean, user?: object, error?: string}>}
  */
-export const tryLogin = async (email, password, rememberMe = false) => {
+export const tryLogin = async (
+  email: string,
+  password: string,
+  rememberMe = false
+): Promise<AuthResult> => {
   try {
     // 저장된 사용자 목록 가져오기
     const usersData = localStorage.getItem(STORAGE_KEYS.USERS);
-    const users = usersData ? JSON.parse(usersData) : [];
+    const users: User[] = usersData ? JSON.parse(usersData) : [];
 
     // 사용자 찾기
     const user = users.find(
@@ -53,7 +55,7 @@ export const tryLogin = async (email, password, rememberMe = false) => {
 
       return {
         success: true,
-        user: { email: user.id }
+        user: { email: user.id! }
       };
     }
 
@@ -61,7 +63,7 @@ export const tryLogin = async (email, password, rememberMe = false) => {
       success: false,
       error: '이메일 또는 API Key가 일치하지 않습니다.'
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: '로그인 중 오류가 발생했습니다.'
@@ -71,11 +73,11 @@ export const tryLogin = async (email, password, rememberMe = false) => {
 
 /**
  * 회원가입 시도
- * @param {string} email - 사용자 이메일
- * @param {string} password - TMDB API Key
- * @returns {Promise<{success: boolean, error?: string}>}
  */
-export const tryRegister = async (email, password) => {
+export const tryRegister = async (
+  email: string,
+  password: string
+): Promise<AuthResult> => {
   try {
     // 이메일 형식 검증
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -97,7 +99,7 @@ export const tryRegister = async (email, password) => {
 
     // 저장된 사용자 목록 가져오기
     const usersData = localStorage.getItem(STORAGE_KEYS.USERS);
-    const users = usersData ? JSON.parse(usersData) : [];
+    const users: User[] = usersData ? JSON.parse(usersData) : [];
 
     // 이미 존재하는 사용자인지 확인
     const userExists = users.some((user) => user.id === email);
@@ -109,13 +111,13 @@ export const tryRegister = async (email, password) => {
     }
 
     // 새 사용자 추가
-    users.push({ id: email, password: password });
+    users.push({ id: email, email, password });
     localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
 
     return {
       success: true
     };
-  } catch (error) {
+  } catch {
     return {
       success: false,
       error: '회원가입 중 오류가 발생했습니다.'
@@ -125,16 +127,14 @@ export const tryRegister = async (email, password) => {
 
 /**
  * TMDB API Key 유효성 검증
- * @param {string} apiKey - TMDB API Key
- * @returns {Promise<boolean>}
  */
-export const validateTMDbKey = async (apiKey) => {
+export const validateTMDbKey = async (apiKey: string): Promise<boolean> => {
   try {
     const response = await fetch(
       `https://api.themoviedb.org/3/movie/popular?api_key=${apiKey}&language=ko-KR&page=1`
     );
     return response.ok;
-  } catch (error) {
+  } catch {
     return false;
   }
 };
@@ -142,7 +142,7 @@ export const validateTMDbKey = async (apiKey) => {
 /**
  * 로그아웃
  */
-export const logout = () => {
+export const logout = (): void => {
   localStorage.removeItem(STORAGE_KEYS.TMDB_KEY);
   localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
   localStorage.removeItem(STORAGE_KEYS.REMEMBER_ME);
@@ -152,9 +152,8 @@ export const logout = () => {
 
 /**
  * 현재 로그인 상태 확인
- * @returns {boolean}
  */
-export const isAuthenticated = () => {
+export const isAuthenticated = (): boolean => {
   const rememberMe = localStorage.getItem(STORAGE_KEYS.REMEMBER_ME);
   
   if (rememberMe === 'true') {
@@ -172,9 +171,8 @@ export const isAuthenticated = () => {
 
 /**
  * 현재 사용자 정보 가져오기
- * @returns {object|null}
  */
-export const getCurrentUser = () => {
+export const getCurrentUser = (): { email: string } | null => {
   const userData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || 
                    sessionStorage.getItem(STORAGE_KEYS.CURRENT_USER);
   return userData ? JSON.parse(userData) : null;
@@ -182,9 +180,8 @@ export const getCurrentUser = () => {
 
 /**
  * 저장된 TMDB API Key 가져오기
- * @returns {string|null}
  */
-export const getApiKey = () => {
+export const getApiKey = (): string | null => {
   return localStorage.getItem(STORAGE_KEYS.TMDB_KEY) || 
          sessionStorage.getItem(STORAGE_KEYS.TMDB_KEY);
 };

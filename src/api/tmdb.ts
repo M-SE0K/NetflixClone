@@ -5,13 +5,14 @@
 
 import axios from 'axios';
 import { getApiKey } from './auth';
+import type { Movie, Genre, TMDBResponse, HomePageData, ImageType, ImageSize, SortField, SortOrder, OriginFilter } from '../types';
 
 // TMDB API 기본 URL
 const BASE_URL = 'https://api.themoviedb.org/3';
 const IMAGE_BASE_URL = 'https://image.tmdb.org/t/p';
 
 // 이미지 사이즈 옵션
-export const IMAGE_SIZES = {
+export const IMAGE_SIZES: Record<ImageType, Record<ImageSize, string>> = {
   backdrop: {
     small: `${IMAGE_BASE_URL}/w300`,
     medium: `${IMAGE_BASE_URL}/w780`,
@@ -35,7 +36,7 @@ export const IMAGE_SIZES = {
 /**
  * 공통 API 요청 파라미터 생성
  */
-const getCommonParams = (page = 1) => ({
+const getCommonParams = (page = 1): Record<string, string | number | null> => ({
   api_key: getApiKey(),
   language: 'ko-KR',
   page
@@ -44,11 +45,14 @@ const getCommonParams = (page = 1) => ({
 /**
  * API 요청 헬퍼 함수
  */
-const fetchFromTMDB = async (endpoint, params = {}) => {
+const fetchFromTMDB = async <T>(
+  endpoint: string,
+  params: Record<string, unknown> = {}
+): Promise<T> => {
   try {
-    const response = await axios.get(`${BASE_URL}${endpoint}`, {
+    const response = await axios.get<T>(`${BASE_URL}${endpoint}`, {
       params: {
-        ...getCommonParams(params.page),
+        ...getCommonParams(params.page as number),
         ...params
       }
     });
@@ -62,22 +66,20 @@ const fetchFromTMDB = async (endpoint, params = {}) => {
 /**
  * 인기 영화 목록 가져오기
  */
-export const getPopularMovies = async (page = 1) => {
-  return fetchFromTMDB('/movie/popular', { page });
+export const getPopularMovies = async (page = 1): Promise<TMDBResponse<Movie>> => {
+  return fetchFromTMDB<TMDBResponse<Movie>>('/movie/popular', { page });
 };
 
 /**
  * 인기 영화 정렬 (discover 기반 서버 정렬)
- * sortField: popularity | vote_average | release_date | title
- * sortOrder: asc | desc
  */
 export const getPopularMoviesSorted = async (
   page = 1,
-  sortField = 'popularity',
-  sortOrder = 'desc',
-  originFilter = 'all' // all | kr | foreign
-) => {
-  const sortMap = {
+  sortField: SortField = 'popularity',
+  sortOrder: SortOrder = 'desc',
+  originFilter: OriginFilter = 'all'
+): Promise<TMDBResponse<Movie>> => {
+  const sortMap: Record<SortField, string> = {
     popularity: 'popularity',
     vote_average: 'vote_average',
     release_date: 'primary_release_date',
@@ -86,14 +88,14 @@ export const getPopularMoviesSorted = async (
   const key = sortMap[sortField] || 'popularity';
   const order = sortOrder === 'asc' ? 'asc' : 'desc';
 
-  const originParams =
+  const originParams: Record<string, string> =
     originFilter === 'kr'
       ? { with_origin_country: 'KR' }
       : originFilter === 'foreign'
         ? { without_origin_country: 'KR' }
         : {};
 
-  return fetchFromTMDB('/discover/movie', {
+  return fetchFromTMDB<TMDBResponse<Movie>>('/discover/movie', {
     sort_by: `${key}.${order}`,
     page,
     ...originParams,
@@ -105,36 +107,36 @@ export const getPopularMoviesSorted = async (
 /**
  * 현재 상영 중인 영화 목록
  */
-export const getNowPlayingMovies = async (page = 1) => {
-  return fetchFromTMDB('/movie/now_playing', { page });
+export const getNowPlayingMovies = async (page = 1): Promise<TMDBResponse<Movie>> => {
+  return fetchFromTMDB<TMDBResponse<Movie>>('/movie/now_playing', { page });
 };
 
 /**
  * 최고 평점 영화 목록
  */
-export const getTopRatedMovies = async (page = 1) => {
-  return fetchFromTMDB('/movie/top_rated', { page });
+export const getTopRatedMovies = async (page = 1): Promise<TMDBResponse<Movie>> => {
+  return fetchFromTMDB<TMDBResponse<Movie>>('/movie/top_rated', { page });
 };
 
 /**
  * 개봉 예정 영화 목록
  */
-export const getUpcomingMovies = async (page = 1) => {
-  return fetchFromTMDB('/movie/upcoming', { page });
+export const getUpcomingMovies = async (page = 1): Promise<TMDBResponse<Movie>> => {
+  return fetchFromTMDB<TMDBResponse<Movie>>('/movie/upcoming', { page });
 };
 
 /**
  * 트렌딩 영화 (일간/주간)
  */
-export const getTrendingMovies = async (timeWindow = 'week') => {
-  return fetchFromTMDB(`/trending/movie/${timeWindow}`);
+export const getTrendingMovies = async (timeWindow: 'day' | 'week' = 'week'): Promise<TMDBResponse<Movie>> => {
+  return fetchFromTMDB<TMDBResponse<Movie>>(`/trending/movie/${timeWindow}`);
 };
 
 /**
  * 장르별 영화 목록
  */
-export const getMoviesByGenre = async (genreId, page = 1) => {
-  return fetchFromTMDB('/discover/movie', {
+export const getMoviesByGenre = async (genreId: number, page = 1): Promise<TMDBResponse<Movie>> => {
+  return fetchFromTMDB<TMDBResponse<Movie>>('/discover/movie', {
     with_genres: genreId,
     sort_by: 'popularity.desc',
     page
@@ -144,10 +146,13 @@ export const getMoviesByGenre = async (genreId, page = 1) => {
 /**
  * 여러 장르로 영화 목록 가져오기 (쉼표 구분)
  */
-export const getMoviesByGenres = async (genreIds = [], page = 1) => {
+export const getMoviesByGenres = async (
+  genreIds: number[] = [],
+  page = 1
+): Promise<TMDBResponse<Movie>> => {
   const ids = Array.isArray(genreIds) ? genreIds : [genreIds];
-  if (!ids.length) return { results: [], total_pages: 0, total_results: 0 };
-  return fetchFromTMDB('/discover/movie', {
+  if (!ids.length) return { results: [], total_pages: 0, total_results: 0, page: 1 };
+  return fetchFromTMDB<TMDBResponse<Movie>>('/discover/movie', {
     with_genres: ids.join(','),
     sort_by: 'popularity.desc',
     page
@@ -157,7 +162,7 @@ export const getMoviesByGenres = async (genreIds = [], page = 1) => {
 /**
  * 영화 상세 정보
  */
-export const getMovieDetails = async (movieId) => {
+export const getMovieDetails = async (movieId: number): Promise<Movie & { videos?: unknown; credits?: unknown; similar?: unknown; recommendations?: unknown }> => {
   return fetchFromTMDB(`/movie/${movieId}`, {
     append_to_response: 'videos,credits,similar,recommendations'
   });
@@ -166,28 +171,32 @@ export const getMovieDetails = async (movieId) => {
 /**
  * 영화 검색
  */
-export const searchMovies = async (query, page = 1) => {
-  return fetchFromTMDB('/search/movie', { query, page });
+export const searchMovies = async (query: string, page = 1): Promise<TMDBResponse<Movie>> => {
+  return fetchFromTMDB<TMDBResponse<Movie>>('/search/movie', { query, page });
 };
 
 /**
  * 장르 목록 가져오기
  */
-export const getGenres = async () => {
-  return fetchFromTMDB('/genre/movie/list');
+export const getGenres = async (): Promise<{ genres: Genre[] }> => {
+  return fetchFromTMDB<{ genres: Genre[] }>('/genre/movie/list');
 };
 
 /**
  * 영화 비디오 (예고편 등) 가져오기
  */
-export const getMovieVideos = async (movieId) => {
+export const getMovieVideos = async (movieId: number): Promise<{ results: unknown[] }> => {
   return fetchFromTMDB(`/movie/${movieId}/videos`);
 };
 
 /**
  * 이미지 URL 생성 헬퍼
  */
-export const getImageUrl = (path, type = 'poster', size = 'medium') => {
+export const getImageUrl = (
+  path: string | null,
+  type: ImageType = 'poster',
+  size: ImageSize = 'medium'
+): string | null => {
   if (!path) return null;
   return `${IMAGE_SIZES[type][size]}${path}`;
 };
@@ -214,12 +223,12 @@ export const GENRE_IDS = {
   THRILLER: 53,
   WAR: 10752,
   WESTERN: 37
-};
+} as const;
 
 /**
  * 홈 페이지용 카테고리별 영화 데이터 가져오기
  */
-export const getHomePageData = async () => {
+export const getHomePageData = async (): Promise<HomePageData> => {
   try {
     const [
       trending,

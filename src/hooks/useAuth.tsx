@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, createContext, useContext } from 'react';
+import { useState, useEffect, useCallback, createContext, useContext, ReactNode } from 'react';
 import { 
   tryLogin as apiLogin, 
   tryRegister as apiRegister, 
@@ -7,16 +7,21 @@ import {
   getCurrentUser,
   getApiKey
 } from '../api/auth';
+import type { AuthContextType, AuthResult } from '../types';
 
 // Auth Context 생성
-const AuthContext = createContext(null);
+const AuthContext = createContext<AuthContextType | null>(null);
+
+interface AuthProviderProps {
+  children: ReactNode;
+}
 
 /**
  * Auth Provider 컴포넌트
  * 전역 인증 상태 관리
  */
-export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+export const AuthProvider = ({ children }: AuthProviderProps) => {
+  const [user, setUser] = useState<{ email: string } | null>(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -38,12 +43,16 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // 로그인
-  const login = useCallback(async (email, password, rememberMe = false) => {
+  const login = useCallback(async (
+    email: string,
+    password: string,
+    rememberMe = false
+  ): Promise<AuthResult> => {
     setIsLoading(true);
     
     const result = await apiLogin(email, password, rememberMe);
     
-    if (result.success) {
+    if (result.success && result.user) {
       setUser(result.user);
       setIsLoggedIn(true);
     }
@@ -53,7 +62,10 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // 회원가입
-  const register = useCallback(async (email, password) => {
+  const register = useCallback(async (
+    email: string,
+    password: string
+  ): Promise<AuthResult> => {
     setIsLoading(true);
     
     const result = await apiRegister(email, password);
@@ -72,7 +84,7 @@ export const AuthProvider = ({ children }) => {
   // API Key 가져오기
   const apiKey = getApiKey();
 
-  const value = {
+  const value: AuthContextType = {
     user,
     isLoggedIn,
     isLoading,
@@ -93,7 +105,7 @@ export const AuthProvider = ({ children }) => {
  * useAuth 커스텀 훅
  * 인증 관련 상태 및 함수 사용
  */
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   
   if (!context) {

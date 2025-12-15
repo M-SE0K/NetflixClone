@@ -1,11 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { nextBanner, resetBanner } from '../store';
+import type { RootState } from '../store';
 import styled, { keyframes } from 'styled-components';
-import Header from '../components/Header';
-import Banner from '../components/Banner';
-import MovieRow from '../components/MovieRow';
+import Header from '../components/common/Header';
+import Banner from '../components/domain/Banner';
+import MovieRow from '../components/domain/MovieRow';
 import { getHomePageData, getImageUrl } from '../api/tmdb';
+import type { Movie, HomePageData } from '../types';
+
+interface HighlightThumbProps {
+  $image: string;
+}
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -184,7 +190,7 @@ const HighlightCard = styled.div`
   }
 `;
 
-const HighlightThumb = styled.div`
+const HighlightThumb = styled.div<HighlightThumbProps>`
   background-image: ${({ $image }) => `url(${$image || ''})`};
   background-size: cover;
   background-position: center;
@@ -232,11 +238,11 @@ const Dot = styled.span`
 `;
 
 const Home = () => {
-  const [movieData, setMovieData] = useState(null);
+  const [movieData, setMovieData] = useState<HomePageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const dispatch = useDispatch();
-  const bannerIndex = useSelector(state => state.ui.bannerIndex);
+  const bannerIndex = useSelector((state: RootState) => state.ui.bannerIndex);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -274,12 +280,11 @@ const Home = () => {
     fetchData();
   }, []);
 
-  const handleMovieClick = (movie) => {
-    // TODO: 영화 상세 모달 또는 페이지 구현
+  const handleMovieClick = (movie: Movie) => {
     console.log('Movie clicked:', movie);
   };
 
-  const getHomeThumb = (m) => {
+  const getHomeThumb = (m: Movie | undefined) => {
     if (!m) return '';
     return getImageUrl(m.backdrop_path, 'backdrop', 'large') 
         || getImageUrl(m.poster_path, 'poster', 'large')
@@ -295,7 +300,7 @@ const Home = () => {
       { label: '곧 만나요', movie: movieData.upcoming?.[0] },
       { label: '액션 한 스푼', movie: movieData.actionMovies?.[0] },
       { label: '웃음 보장', movie: movieData.comedyMovies?.[0] },
-    ].filter(item => item.movie);
+    ].filter(item => item.movie) as { label: string; movie: Movie }[];
   }, [movieData]);
 
   if (isLoading) {

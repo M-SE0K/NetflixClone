@@ -72,13 +72,13 @@ const starFieldMove = keyframes`
   100% { background-position: 520px 360px, -420px 300px, 340px 520px, -260px 440px, 420px 240px, -320px 340px; }
 `;
 
-// 폼 전환용 모션 variants
+// 폼 전환용 모션 variants (1초, 부드러운 전환)
 const formVariants = {
   initial: (isLogin) => ({
     opacity: 0,
-    y: 12,
-    scale: 0.99,
-    filter: 'blur(2px)'
+    y: 20,
+    scale: 0.98,
+    filter: 'blur(4px)'
   }),
   animate: {
     opacity: 1,
@@ -86,18 +86,18 @@ const formVariants = {
     scale: 1,
     filter: 'blur(0px)',
     transition: {
-      duration: 0.45,
-      ease: [0.25, 0.1, 0.25, 1],
+      duration: 1,
+      ease: [0.4, 0, 0.2, 1],
     }
   },
   exit: (isLogin) => ({
     opacity: 0,
-    y: isLogin ? -12 : 12,
-    scale: 0.99,
-    filter: 'blur(2px)',
+    y: isLogin ? -20 : 20,
+    scale: 0.98,
+    filter: 'blur(4px)',
     transition: {
-      duration: 0.35,
-      ease: [0.4, 0, 0.6, 1]
+      duration: 0.5,
+      ease: [0.4, 0, 0.2, 1]
     }
   })
 };
@@ -154,6 +154,15 @@ const Container = styled.div`
     pointer-events: none;
     will-change: background-position, opacity, transform;
   }
+
+  @media (max-width: 960px) {
+    height: 100vh;
+    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 12px;
+    overflow: hidden;
+  }
 `;
 
 const Stage = styled.div<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
@@ -174,12 +183,13 @@ const Stage = styled.div<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
   
   @media (max-width: 960px) {
     flex-direction: column;
-    min-height: auto;
-    height: auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0;
     max-height: none;
-    padding: 16px;
-    gap: 16px;
-    border-radius: 16px;
+    padding: 12px;
+    gap: 12px;
+    border-radius: 12px;
   }
 `;
 
@@ -230,10 +240,10 @@ const SlidePanel = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: bool
   @media (max-width: 960px) {
     flex: 0 0 auto;
     width: 100%;
-    height: 200px;
-    min-height: 200px;
+    height: 140px;
+    min-height: 140px;
     margin: 0;
-    border-radius: 12px;
+    border-radius: 10px;
     order: ${props => props.$isLoginMode ? 0 : 1};
   }
 `;
@@ -256,6 +266,11 @@ const SlideContent = styled.div`
   flex-direction: column;
   gap: 14px;
   align-items: center;
+
+  @media (max-width: 960px) {
+    padding: 12px;
+    gap: 8px;
+  }
 `;
 
 const SlideTitle = styled.h3`
@@ -263,6 +278,10 @@ const SlideTitle = styled.h3`
   font-weight: 800;
   letter-spacing: 0.3px;
   margin: 0;
+
+  @media (max-width: 960px) {
+    font-size: 18px;
+  }
 `;
 
 const SlideText = styled.p`
@@ -271,6 +290,10 @@ const SlideText = styled.p`
   color: #f4f4f4;
   font-size: 15px;
   max-width: 320px;
+
+  @media (max-width: 960px) {
+    display: none;
+  }
 `;
 
 const SlideButton = styled.button`
@@ -291,6 +314,12 @@ const SlideButton = styled.button`
     background: rgb(155, 155, 155);
     color: rgb(0, 0, 0);
     border-color: rgba(0, 0, 0, 0.25);
+  }
+
+  @media (max-width: 960px) {
+    margin-top: 0;
+    padding: 8px 18px;
+    font-size: 13px;
   }
 `;
 
@@ -317,11 +346,13 @@ const FormColumn = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: bool
   will-change: transform;
 
   @media (max-width: 960px) {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     width: 100%;
     min-width: auto;
+    min-height: 0;
     padding: 0;
     margin: 0;
+    overflow-y: auto;
     order: ${props => props.$isLoginMode ? 1 : 0};
   }
 `;
@@ -358,11 +389,14 @@ const FormWrapper = styled.div`
     z-index: 1;
   }
 
-  @media (max-width: 740px) {
-    padding: 32px 24px 32px;
+  @media (max-width: 960px) {
+    padding: 16px 16px 20px;
     max-width: 100%;
     background: rgba(0, 0, 0, 0.75);
-    min-height: auto;
+    min-height: 0;
+    height: auto;
+    justify-content: flex-start;
+    border-radius: 10px;
   }
 `;
 
@@ -375,6 +409,11 @@ const Logo = styled.div`
   margin-bottom: 30px;
   letter-spacing: 2px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
+  @media (max-width: 960px) {
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+  }
 `;
 
 const Title = styled.h1`
@@ -383,19 +422,28 @@ const Title = styled.h1`
   font-weight: 700;
   margin-bottom: 28px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  @media (max-width: 960px) {
+    font-size: 22px;
+    margin-bottom: 12px;
+  }
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  @media (max-width: 960px) {
+    gap: 8px;
+  }
 `;
 
 const InputGroup = styled.div`
   position: relative;
 `;
 
-const Input = styled.input`
+const Input = styled.input<{ $hasError?: boolean }>`
   width: 100%;
   padding: 18px 22px;
   margin-bottom: 10px;
@@ -415,6 +463,12 @@ const Input = styled.input`
 
   &::placeholder {
     color: #8c8c8c;
+  }
+
+  @media (max-width: 960px) {
+    padding: 12px 14px;
+    margin-bottom: 4px;
+    font-size: 14px;
   }
 `;
 
@@ -454,6 +508,12 @@ const SubmitButton = styled.button`
     cursor: not-allowed;
     transform: none;
   }
+
+  @media (max-width: 960px) {
+    padding: 12px;
+    margin-top: 12px;
+    font-size: 14px;
+  }
 `;
 
 const LoadingSpinner = styled.div`
@@ -477,6 +537,10 @@ const CheckboxWrapper = styled.div`
   align-items: center;
   gap: 8px;
   margin-top: 12px;
+
+  @media (max-width: 960px) {
+    margin-top: 4px;
+  }
 `;
 
 const Checkbox = styled.input`
@@ -498,6 +562,11 @@ const SwitchText = styled.p`
   font-size: 16px;
   margin-top: 24px;
   text-align: center;
+
+  @media (max-width: 960px) {
+    font-size: 13px;
+    margin-top: 12px;
+  }
 `;
 
 const SwitchLink = styled.span`
@@ -533,6 +602,10 @@ const InfoBox = styled.div`
     &:hover {
       text-decoration: underline;
     }
+  }
+
+  @media (max-width: 960px) {
+    display: none;
   }
 `;
 
@@ -988,7 +1061,7 @@ const SignIn = () => {
         <SlidePanel
           initial={false}
           animate={slidePanelAnimation}
-          transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+          transition={{ type: 'tween', duration: 1, ease: [0.4, 0, 0.2, 1] }}
           $isMobile={isMobile}
           $isLoginMode={isLoginMode}
         >
@@ -1008,7 +1081,7 @@ const SignIn = () => {
         <FormColumn
           initial={false}
           animate={formColumnAnimation}
-          transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+          transition={{ type: 'tween', duration: 1, ease: [0.4, 0, 0.2, 1] }}
           $isMobile={isMobile}
           $isLoginMode={isLoginMode}
         >

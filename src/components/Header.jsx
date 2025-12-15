@@ -229,13 +229,11 @@ const DropdownItem = styled.button`
 const MobileMenuButton = styled.button`
   display: none;
   background: none;
-  border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
   font-size: 20px;
   cursor: pointer;
   padding: 8px;
   border-radius: 12px;
-  background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
   transition: transform 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
 
   &:hover {

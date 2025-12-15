@@ -36,71 +36,37 @@ const shake = keyframes`
   40%, 80% { transform: translateX(5px); }
 `;
 
-const glowShift = keyframes`
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+// 성능 최적화: 단순한 애니메이션만 사용
+const subtleGlow = keyframes`
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 0.8; }
 `;
 
-const floaty = keyframes`
-  0% { transform: translateY(0px) scale(1); opacity: 0.9; }
-  50% { transform: translateY(-14px) scale(1.03); opacity: 1; }
-  100% { transform: translateY(0px) scale(1); opacity: 0.9; }
-`;
-
-const twinkle = keyframes`
-  0% { opacity: 0.3; transform: scale(0.9); }
-  50% { opacity: 0.9; transform: scale(1.05); }
-  100% { opacity: 0.3; transform: scale(0.9); }
-`;
-
-const galaxyDrift = keyframes`
-  0% { background-position: 0% 0%, 0% 0%, 0% 0%, 50% 50%; }
-  50% { background-position: 40% 28%, 24% 50%, 64% 55%, 58% 58%; }
-  100% { background-position: 80% 62%, 48% 96%, 4% 80%, 62% 62%; }
-`;
-
-const starTwinkle = keyframes`
-  0%, 100% { opacity: 0.65; transform: scale(1); }
-  50% { opacity: 1; transform: scale(1.08); }
-`;
-
-const starFieldMove = keyframes`
-  0% { background-position: 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px, 0px 0px; }
-  100% { background-position: 520px 360px, -420px 300px, 340px 520px, -260px 440px, 420px 240px, -320px 340px; }
-`;
-
-// 폼 전환용 모션 variants
+// 폼 전환용 모션 variants - 성능 최적화
 const formVariants = {
-  initial: () => ({
+  initial: {
     opacity: 0,
-    y: 12,
-    scale: 0.99,
-    filter: 'blur(2px)'
-  }),
+    y: 10
+  },
   animate: {
     opacity: 1,
     y: 0,
-    scale: 1,
-    filter: 'blur(0px)',
     transition: {
-      duration: 1,
-      ease: [0.4, 0, 0.2, 1],
+      duration: 0.3,
+      ease: 'easeOut' as const,
     }
   },
-  exit: (isLogin: boolean) => ({
+  exit: {
     opacity: 0,
-    y: isLogin ? -12 : 12,
-    scale: 0.99,
-    filter: 'blur(2px)',
+    y: -10,
     transition: {
-      duration: 0.5,
-      ease: [0.4, 0, 0.2, 1]
+      duration: 0.2,
+      ease: 'easeIn' as const
     }
-  })
+  }
 };
 
-// Styled Components
+// Styled Components - 성능 최적화 버전
 const Container = styled.div`
   min-height: 100vh;
   display: flex;
@@ -109,27 +75,17 @@ const Container = styled.div`
   padding: clamp(18px, 3vw, 40px);
   position: relative;
   overflow: hidden;
-  background: radial-gradient(120% 80% at 10% 20%, rgba(229, 9, 20, 0.2), transparent 40%),
-    radial-gradient(140% 120% at 80% 15%, rgba(109, 30, 36, 0.18), transparent 42%),
-    linear-gradient(135deg, #030304 0%, #09080d 40%, #050406 100%);
+  background: linear-gradient(135deg, #0a0a0c 0%, #141418 50%, #0a0a0c 100%);
 
   &::before {
     content: '';
     position: absolute;
-    inset: -15%;
+    inset: 0;
     background:
-      radial-gradient(circle at 25% 35%, rgba(229, 9, 20, 0.28), transparent 32%),
-      radial-gradient(circle at 75% 25%, rgba(255, 255, 255, 0.12), transparent 30%),
-      radial-gradient(circle at 60% 75%, rgba(229, 9, 20, 0.18), transparent 32%),
-      radial-gradient(circle at 30% 35%, rgba(229, 9, 20, 0.28), transparent 32%),
-      radial-gradient(circle at 80% 85%, rgba(229, 9, 20, 0.28), transparent 32%),
-      linear-gradient(160deg, rgba(10, 10, 12, 0.9), rgba(6, 6, 8, 0.7));
-    background-size: 140% 140%, 120% 120%, 120% 120%, 100% 100%;
-    animation: ${galaxyDrift} 5s ease-in-out infinite alternate;
-    filter: blur(6px);
-    opacity: 0.9;
-    transform: scale(1.05);
-    will-change: transform, background-position;
+      radial-gradient(ellipse 80% 60% at 20% 30%, rgba(229, 9, 20, 0.15), transparent),
+      radial-gradient(ellipse 60% 50% at 80% 70%, rgba(229, 9, 20, 0.1), transparent);
+    animation: ${subtleGlow} 4s ease-in-out infinite;
+    pointer-events: none;
   }
 
   &::after {
@@ -137,20 +93,12 @@ const Container = styled.div`
     position: absolute;
     inset: 0;
     background-image:
-      radial-gradient(1px 1px at 10% 20%, rgba(255,255,255,0.8), transparent),
-      radial-gradient(1.2px 1.2px at 30% 40%, rgba(255,255,255,0.6), transparent),
-      radial-gradient(1px 1px at 50% 25%, rgba(255,255,255,0.75), transparent),
-      radial-gradient(1.3px 1.3px at 75% 65%, rgba(255,255,255,0.7), transparent),
-      radial-gradient(0.9px 0.9px at 85% 30%, rgba(255,255,255,0.5), transparent),
-      radial-gradient(1px 1px at 20% 75%, rgba(255,255,255,0.65), transparent);
-      radial-gradient(1px 1px at 20% 75%, rgba(255,255,255,0.65), transparent), 
-      radial-gradient(1px 1px at 20% 75%, rgba(255,255,255,0.65), transparent), 
-    background-repeat: no-repeat;
-    animation: ${starTwinkle} 5s ease-in-out infinite alternate, ${starFieldMove} 10s linear infinite;
-    mix-blend-mode: screen;
-    opacity: 0.9;
+      radial-gradient(1px 1px at 15% 25%, rgba(255,255,255,0.5), transparent),
+      radial-gradient(1px 1px at 45% 65%, rgba(255,255,255,0.4), transparent),
+      radial-gradient(1px 1px at 75% 35%, rgba(255,255,255,0.45), transparent),
+      radial-gradient(1px 1px at 85% 85%, rgba(255,255,255,0.35), transparent);
+    opacity: 0.7;
     pointer-events: none;
-    will-change: background-position, opacity, transform;
   }
 `;
 
@@ -162,12 +110,11 @@ const Stage = styled.div<{ $isMobile?: boolean }>`
   align-items: stretch;
   justify-content: stretch;
   gap: 10px;
-  background: rgba(0, 0, 0, 0.55);
+  background: rgba(10, 10, 12, 0.95);
   border: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.02);
+  box-shadow: 0 20px 70px rgba(0, 0, 0, 0.6);
   border-radius: 20px;
   overflow: hidden;
-  backdrop-filter: blur(12px);
   padding: 40px;
   
   @media (max-width: 960px) {
@@ -187,44 +134,17 @@ const SlidePanel = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: bool
   flex: 1 1 50%;
   min-width: 0;
   min-height: 100%;
-  background: 
-    linear-gradient(145deg, rgba(125, 10, 16, 0.96) 0%, rgba(70, 5, 8, 0.95) 38%, rgba(26, 3, 4, 0.94) 68%, rgba(90, 3, 8, 0.93) 100%),
-    url('https://images.unsplash.com/photo-1513105737059-ff0cf0580dd5?auto=format&fit=crop&w=1600&q=80');
-  background-size: cover;
-  background-position: center;
+  background: linear-gradient(145deg, rgba(180, 15, 25, 0.95) 0%, rgba(100, 8, 12, 0.95) 50%, rgba(60, 5, 8, 0.95) 100%);
   border-radius: 1rem;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 14px 34px rgba(0, 0, 0, 0.35);
-  margin: 40px 0px 40px 0px;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.45);
+  margin: 40px 0px 40px 0px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1;
   flex-shrink: 0;
-  will-change: transform;
-
-  &::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: radial-gradient(circle at 25% 20%, rgba(255,255,255,0.12), transparent 32%),
-      radial-gradient(circle at 80% 35%, rgba(255,255,255,0.08), transparent 30%),
-      linear-gradient(180deg, rgba(0,0,0,0.14), transparent 40%, rgba(0,0,0,0.18));
-    mix-blend-mode: screen;
-    pointer-events: none;
-  }
-
-  &::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: radial-gradient(rgba(255, 255, 255, 0.08) 0.6px, transparent 0.6px);
-    background-size: 26px 26px;
-    opacity: 0.35;
-    pointer-events: none;
-  }
 
   @media (max-width: 960px) {
     flex: 0 0 auto;
@@ -312,15 +232,13 @@ const SlideButton = styled.button`
   }
 `;
 
-const FloatingDot = styled.div`
+const FloatingDot = styled.div<{ $size?: number; $duration?: number }>`
   position: absolute;
   width: ${props => props.$size || 10}px;
   height: ${props => props.$size || 10}px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.55);
-  filter: blur(1px);
-  opacity: 0.6;
-  animation: ${twinkle} ${props => props.$duration || 6}s ease-in-out infinite;
+  background: rgba(255, 255, 255, 0.4);
+  opacity: 0.5;
 `;
 
 const FormColumn = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
@@ -332,7 +250,6 @@ const FormColumn = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: bool
   padding: clamp(22px, 5vw, 48px);
   z-index: 2;
   flex-shrink: 0;
-  will-change: transform;
 
   @media (max-width: 960px) {
     flex: 1 1 auto;
@@ -346,7 +263,7 @@ const FormColumn = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: bool
 `;
 
 const FormWrapper = styled.div`
-  background: linear-gradient(135deg, rgba(0, 0, 0, 0.82), rgba(20, 20, 20, 0.9));
+  background: linear-gradient(135deg, rgba(0, 0, 0, 0.9), rgba(20, 20, 20, 0.95));
   border-radius: 8px;
   padding: clamp(32px, 4vw, 60px) clamp(28px, 4vw, 68px) 40px;
   width: 100%;
@@ -354,7 +271,6 @@ const FormWrapper = styled.div`
   min-width: 0;
   min-height: 520px;
   height: 100%;
-  animation: ${fadeIn} 0.5s ease-out;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   position: relative;
   overflow: hidden;
@@ -362,25 +278,10 @@ const FormWrapper = styled.div`
   flex-direction: column;
   justify-content: center;
 
-  &::before {
-    content: '';
-    position: absolute;
-    inset: -20%;
-    background: linear-gradient(120deg, rgba(229,9,20,0.08), rgba(255,255,255,0.04), rgba(109,109,110,0.08));
-    filter: blur(40px);
-    z-index: 0;
-    animation: ${glowShift} 8s ease-in-out infinite;
-  }
-
-  > * {
-    position: relative;
-    z-index: 1;
-  }
-
   @media (max-width: 960px) {
     padding: 20px 16px;
     max-width: 100%;
-    background: rgba(0, 0, 0, 0.75);
+    background: rgba(0, 0, 0, 0.85);
     min-height: auto;
     height: 100%;
     border-radius: 12px;
@@ -1049,9 +950,9 @@ const SignIn = () => {
     : { x: isLoginMode ? '0%' : '-100%' };
 
   const transitionConfig = {
-    type: 'tween',
-    duration: 1,
-    ease: [0.4, 0, 0.2, 1]
+    type: 'tween' as const,
+    duration: 0.5,
+    ease: [0.4, 0, 0.2, 1] as [number, number, number, number]
   };
 
   return (
@@ -1093,11 +994,9 @@ const SignIn = () => {
                 <motion.div
                   key={isLoginMode ? 'login-form' : 'register-form'}
                   variants={formVariants}
-                  custom={isLoginMode}
                   initial="initial"
                   animate="animate"
                   exit="exit"
-                  style={{ transformOrigin: 'center' }}
                 >
                   <InputGroup>
                     <Input

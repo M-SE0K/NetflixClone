@@ -1,10 +1,24 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
+
+// 모바일 감지 훅
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 960);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  return isMobile;
+};
 
 // 애니메이션 정의
 const fadeIn = keyframes`
@@ -142,7 +156,7 @@ const Container = styled.div`
   }
 `;
 
-const Stage = styled.div`
+const Stage = styled.div<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
   position: relative;
   width: min(1120px, 98vw);
   min-height: 660px;
@@ -157,14 +171,19 @@ const Stage = styled.div`
   overflow: hidden;
   backdrop-filter: blur(12px);
   padding: 40px;
+  
   @media (max-width: 960px) {
     flex-direction: column;
-    min-height: 760px;
-    padding: 0;
+    min-height: auto;
+    height: auto;
+    max-height: none;
+    padding: 16px;
+    gap: 16px;
+    border-radius: 16px;
   }
 `;
 
-const SlidePanel = styled(motion.div)`
+const SlidePanel = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
   position: relative;
   flex: 1 1 50%;
   min-width: 0;
@@ -209,9 +228,13 @@ const SlidePanel = styled(motion.div)`
   }
 
   @media (max-width: 960px) {
+    flex: 0 0 auto;
     width: 100%;
-    min-height: 240px;
-    height: 240px;
+    height: 200px;
+    min-height: 200px;
+    margin: 0;
+    border-radius: 12px;
+    order: ${props => props.$isLoginMode ? 0 : 1};
   }
 `;
 
@@ -282,7 +305,7 @@ const FloatingDot = styled.div`
   animation: ${twinkle} ${props => props.$duration || 6}s ease-in-out infinite;
 `;
 
-const FormColumn = styled(motion.div)`
+const FormColumn = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
   flex: 1 1 50%;
   min-width: 0;
   display: flex;
@@ -294,10 +317,12 @@ const FormColumn = styled(motion.div)`
   will-change: transform;
 
   @media (max-width: 960px) {
+    flex: 1 1 auto;
     width: 100%;
     min-width: auto;
-    padding: clamp(18px, 4vw, 36px);
-    margin-top: 12px;
+    padding: 0;
+    margin: 0;
+    order: ${props => props.$isLoginMode ? 1 : 0};
   }
 `;
 
@@ -781,6 +806,7 @@ const TERMS_DATA = {
 const SignIn = () => {
   const navigate = useNavigate();
   const { login, register, isLoading } = useAuth();
+  const isMobile = useIsMobile();
   
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [formData, setFormData] = useState({
@@ -947,13 +973,24 @@ const SignIn = () => {
     : '빠른 로그인으로 다시 이어보세요. TMDB API Key를 비밀번호 칸에 입력하세요.';
   const slideCta = isLoginMode ? '회원가입으로 전환' : '로그인으로 전환';
 
+  // 데스크톱: 좌우 슬라이드, 모바일: 위아래 슬라이드 + 순서 변경
+  const slidePanelAnimation = isMobile
+    ? { y: isLoginMode ? 0 : 20, opacity: 1, scale: 1 }
+    : { x: isLoginMode ? '0%' : '100%' };
+  
+  const formColumnAnimation = isMobile
+    ? { y: isLoginMode ? 0 : -20, opacity: 1, scale: 1 }
+    : { x: isLoginMode ? '0%' : '-100%' };
+
   return (
     <Container>
-      <Stage>
+      <Stage $isMobile={isMobile} $isLoginMode={isLoginMode}>
         <SlidePanel
           initial={false}
-          animate={{ x: isLoginMode ? '0%' : '100%' }}
+          animate={slidePanelAnimation}
           transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+          $isMobile={isMobile}
+          $isLoginMode={isLoginMode}
         >
           <SlideOverlay />
           <FloatingDot style={{ top: '18%', left: '16%' }} $size={12} $duration={7} />
@@ -970,8 +1007,10 @@ const SignIn = () => {
 
         <FormColumn
           initial={false}
-          animate={{ x: isLoginMode ? '0%' : '-100%' }}
+          animate={formColumnAnimation}
           transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+          $isMobile={isMobile}
+          $isLoginMode={isLoginMode}
         >
           <FormWrapper>
             <Logo>M-FLIX</Logo>

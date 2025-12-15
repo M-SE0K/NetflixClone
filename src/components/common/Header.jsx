@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { useAuth } from '../hooks/useAuth.jsx';
-import { useWishlist } from '../hooks/useWishlist.jsx';
+import { useAuth } from '../../hooks/useAuth.jsx';
+import { useWishlist } from '../../hooks/useWishlist.jsx';
 import { Search, Heart, LogOut, Menu, X } from 'lucide-react';
 
 const HeaderContainer = styled.header`

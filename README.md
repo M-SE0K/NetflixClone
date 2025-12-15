@@ -37,6 +37,15 @@ VITE_TMDB_API_KEY=YOUR_TMDB_KEY
 - 페이지 전환: 모든 라우트에 공통 Fade/Blur 전환(Framer Motion).
 - 애니메이션: 배너 슬라이드 fade, 카드/테이블 셔플, 폼 전환 fade.
 
+## 폴더 구조
+- `src/pages`: 라우트별 페이지
+- `src/components/common`: 공통/유틸 컴포넌트 (헤더, 보호 라우트 등)
+- `src/components/domain`: 도메인 UI (배너, 카드/그리드/테이블, 필터, 슬라이더 등)
+- `src/hooks`: 커스텀 훅 (auth, wishlist, infinite scroll, debounce)
+- `src/api`: TMDB, auth 유틸
+- `src/store`: Redux Toolkit 슬라이스
+- `src/styles`: 글로벌 스타일/테마 (필요 시)
+
 ## Local Storage 사용
 - `movieWishlist`: 위시리스트 (새로고침 후 유지, 외부 API 없음)
 - `recentSearches`: 최근 검색어 최대 8개

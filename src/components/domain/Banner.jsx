@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { AnimatePresence, motion } from 'framer-motion';
-import { getImageUrl } from '../api/tmdb';
-import { useWishlist } from '../hooks/useWishlist.jsx';
+import { getImageUrl } from '../../api/tmdb';
+import { useWishlist } from '../../hooks/useWishlist.jsx';
 
 const fadeIn = keyframes`
   from { opacity: 0; }

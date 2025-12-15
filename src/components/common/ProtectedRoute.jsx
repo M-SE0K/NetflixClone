@@ -1,5 +1,5 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth.jsx';
+import { useAuth } from '../../hooks/useAuth.jsx';
 import styled, { keyframes } from 'styled-components';
 
 // 로딩 애니메이션

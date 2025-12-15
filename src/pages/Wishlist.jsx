@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react';
 import styled, { keyframes } from 'styled-components';
-import Header from '../components/Header';
-import MovieTable from '../components/MovieTable';
-import MovieGrid from '../components/MovieGrid';
+import Header from '../components/common/Header';
+import MovieTable from '../components/domain/MovieTable';
+import MovieGrid from '../components/domain/MovieGrid';
 import { useWishlist } from '../hooks/useWishlist.jsx';
 import { getImageUrl } from '../api/tmdb';
 

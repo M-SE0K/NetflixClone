@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import styled, { keyframes } from 'styled-components';
-import { getImageUrl } from '../api/tmdb';
-import { useWishlist } from '../hooks/useWishlist.jsx';
+import { getImageUrl } from '../../api/tmdb';
+import { useWishlist } from '../../hooks/useWishlist.jsx';
 import MovieDetailModal from './MovieDetailModal';
 
 const TableContainer = styled.div`

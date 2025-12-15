@@ -2,9 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { nextBanner, resetBanner } from '../store';
 import styled, { keyframes } from 'styled-components';
-import Header from '../components/Header';
-import Banner from '../components/Banner';
-import MovieRow from '../components/MovieRow';
+import Header from '../components/common/Header';
+import Banner from '../components/domain/Banner';
+import MovieRow from '../components/domain/MovieRow';
 import { getHomePageData, getImageUrl } from '../api/tmdb';
 
 const fadeIn = keyframes`

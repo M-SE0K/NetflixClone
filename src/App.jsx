@@ -6,7 +6,7 @@ import { WishlistProvider } from './hooks/useWishlist.jsx';
 import { ToastContainer } from 'react-toastify';
 import { AnimatePresence, motion } from 'framer-motion';
 import 'react-toastify/dist/ReactToastify.css';
-import ProtectedRoute from './components/ProtectedRoute';
+import ProtectedRoute from './components/common/ProtectedRoute';
 import SignIn from './pages/SignIn';
 import Home from './pages/Home';
 import Popular from './pages/Popular';

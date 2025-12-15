@@ -235,12 +235,14 @@ const MobileMenuButton = styled.button`
   padding: 8px;
   border-radius: 12px;
   transition: transform 0.2s, background 0.2s, border-color 0.2s, box-shadow 0.2s;
-
   &:hover {
     transform: translateY(-1px) scale(1.06);
     background: rgba(255,255,255,0.12);
     border-color: rgba(255,255,255,0.35);
     box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+  }
+  &:active {
+    color: #e50194;
   }
 
   @media (max-width: 768px) {
@@ -261,12 +263,14 @@ const MobileMenu = styled.div`
   opacity: ${props => props.$isOpen ? 1 : 0};
   visibility: ${props => props.$isOpen ? 'visible' : 'hidden'};
   transition: all 0.3s ease;
-
+  z-index: 3;
   @media (max-width: 768px) {
     display: flex;
     flex-direction: column;
     gap: 16px;
+    z-index: 3;
   }
+  
 `;
 
 const MobileNavLink = styled(Link)`
@@ -274,6 +278,15 @@ const MobileNavLink = styled(Link)`
   font-size: 16px;
   padding: 12px 0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  transition: color 0.2s ease;
+
+  &:hover {
+    color: #e50194;
+  }
+
+  &:active {
+    color: #e50194;
+  }
 `;
 
 const Header = () => {
@@ -378,7 +391,27 @@ const Header = () => {
             {item.label}
           </MobileNavLink>
         ))}
-        <MobileNavLink as="button" onClick={handleLogout} style={{ color: '#e50914' }}>
+        <MobileNavLink
+          as="button"
+          onClick={handleLogout}
+          style={{ color: '#e50914' }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.background = '#e50914';
+            e.currentTarget.style.color = 'rgb(255, 255, 255)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = 'transparent';
+            e.currentTarget.style.color = '#e50914';
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.background = '#e50914';
+            e.currentTarget.style.color = 'rgb(255, 255, 255)';
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.background = '#e50914';
+            e.currentTarget.style.color = 'rgb(255, 255, 255)';
+          }}
+        >
           로그아웃
         </MobileNavLink>
       </MobileMenu>

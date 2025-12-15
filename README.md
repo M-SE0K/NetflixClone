@@ -23,49 +23,74 @@ TMDB API를 활용한 넷플릭스 스타일 SPA 데모입니다. TypeScript 기
 - **React-Toastify** - 알림 시스템
 - **Lucide React** - 아이콘
 
-## 📦 설치
+## 📦 설치 및 설정
 
 ### 요구 사항
 - Node.js 18.x 이상
 - npm 9.x 이상
+- TMDB API Key ([발급 링크](https://www.themoviedb.org/))
 
-### 설치 명령
+### 빠른 시작 (권장)
 
 ```bash
-# 저장소 클론
+# 1. 저장소 클론
 git clone https://github.com/m-se0k/NetflixClone.git
 cd NetflixClone
 
-# 의존성 설치
+# 2. 의존성 설치
 npm install
+
+# 3. 프로젝트 설정 (환경 변수 자동 생성)
+npm run setup
+
+# 4. 개발 서버 시작
+npm run dev
 ```
 
-### 환경 변수 설정
+`npm run setup` 명령은 다음을 수행합니다:
+- `.env` 파일 생성 및 TMDB API Key 입력 안내
+- 프로젝트 구조 검증
+- TypeScript 설정 확인
 
-프로젝트 루트에 `.env` 파일을 생성하고 TMDB API Key를 입력합니다:
+### 수동 설정
 
+환경 변수를 수동으로 설정하려면:
+
+```bash
+# .env.example을 복사
+cp .env.example .env
+
+# .env 파일을 열어 API Key 입력
+```
+
+`.env` 파일 내용:
 ```env
 VITE_TMDB_API_KEY=YOUR_TMDB_API_KEY
 ```
 
 > 💡 TMDB API Key는 [TMDB 공식 사이트](https://www.themoviedb.org/)에서 무료로 발급받을 수 있습니다.
 
-## 🏃 실행
+## 🏃 사용 가능한 스크립트
+
+| 명령어 | 설명 |
+|--------|------|
+| `npm run dev` | 개발 서버 시작 (기본 포트: 5173) |
+| `npm run build` | 프로덕션 빌드 |
+| `npm run preview` | 빌드 미리보기 |
+| `npm run setup` | 프로젝트 초기 설정 |
+| `npm run lint` | ESLint 코드 검사 |
+| `npm run typecheck` | TypeScript 타입 체크 |
+| `npm run deploy` | GitHub Pages 배포 |
 
 ```bash
-# 개발 서버 시작 (기본 포트: 5173)
+# 개발 서버 시작
 npm run dev
 
-# 프로덕션 빌드
+# 타입 체크
+npm run typecheck
+
+# 프로덕션 빌드 및 배포
 npm run build
-
-# 빌드 미리보기
-npm run preview
-
-# ESLint 검사
-npm run lint
-
-# GitHub Pages 배포
 npm run deploy
 ```
 
@@ -158,21 +183,73 @@ src/
 
 ## 🌐 배포
 
-GitHub Pages로 자동 배포됩니다:
+### 배포 URL
 
-```bash
-# 수동 배포
-npm run deploy
+🔗 **https://m-se0k.github.io/NetflixClone/**
+
+### CI/CD 파이프라인
+
+GitHub Actions를 통한 자동 배포가 설정되어 있습니다.
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    배포 워크플로우                              │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│   feature/*  ──┬──▶  Pull Request  ──▶  main  ──▶  Deploy   │
+│   fix/*       ─┘          │                │                │
+│                           │                │                │
+│                        Approval       GitHub Actions        │
+│                                       자동 빌드 & 배포         │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
 ```
 
-배포 URL: `https://m-se0k.github.io/NetflixClone/`
+### 브랜치 정책
+
+| 브랜치 | 설명 | 직접 Push |
+|--------|------|:---------:|
+| `main` | 프로덕션 브랜치 (배포 트리거) | ❌ 불가 |
+| `feature/*` | 기능 개발 브랜치 | ✅ 가능 |
+| `hotfix/*` | 긴급 버그 수정 브랜치 | ✅ 가능 |
+
+> ⚠️ **main 브랜치에 직접 Push가 불가능합니다.** Pull Request를 통해서만 변경사항을 반영할 수 있습니다.
+
+### 배포 프로세스
+
+1. **기능 개발**: `feature/기능명` 브랜치에서 작업
+2. **Pull Request 생성**: main 브랜치로 PR 생성
+3. **Merge**: PR이 main에 머지되면 자동 배포 시작
+4. **배포 완료**: GitHub Pages에 반영 (약 1-2분 소요)
+
+### GitHub Actions 워크플로우
+
+`.github/workflows/deploy.yml`:
+- **트리거**: main 브랜치 push 또는 수동 실행
+- **Node.js**: 18.x
+- **빌드**: `npm ci` → `npm run build`
+- **배포**: GitHub Pages artifact 업로드
+
+---
+
+## 📋 릴리즈 노트
+
+버전별 변경사항은 GitHub Releases에서 확인할 수 있습니다.
+
+🔗 **[Releases 보기](https://github.com/m-se0k/NetflixClone/releases)**
+
+### 버전 히스토리
+
+| 버전 | 날짜 | 주요 변경사항 |
+|------|------|---------------|
+| v1.0.0 | - | 초기 릴리즈 - 기본 기능 구현 |
+| v1.1.0 | - | 검색/필터 기능 강화, 무한 스크롤 |
+| v2.0.0 | - | TypeScript 마이그레이션, 폴더 구조 개선 |
+
+> 자세한 내용은 [GitHub Releases](https://github.com/m-se0k/NetflixClone/releases) 페이지를 참조하세요.
 
 ## ⚠️ 유의사항
 
 1. TMDB API Key가 필요합니다.
 2. 회원가입 시 비밀번호 필드에 TMDB API Key를 입력합니다.
 3. Wishlist 페이지는 Local Storage만 사용하며 TMDB API를 호출하지 않습니다.
-
-## 📄 라이선스
-
-MIT License

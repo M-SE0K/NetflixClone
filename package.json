@@ -8,7 +8,9 @@
     "build": "vite build",
     "postbuild": "cp dist/index.html dist/404.html || true",
     "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
+    "setup": "node scripts/setup.js",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },

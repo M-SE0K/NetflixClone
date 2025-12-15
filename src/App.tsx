@@ -14,18 +14,16 @@ import Search from './pages/Search';
 import Wishlist from './pages/Wishlist';
 
 const pageVariants = {
-  initial: { opacity: 0, y: 16, filter: 'blur(4px)' },
+  initial: { opacity: 0, y: 12 },
   animate: {
     opacity: 1,
     y: 0,
-    filter: 'blur(0px)',
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }
+    transition: { duration: 0.3, ease: 'easeOut' as const }
   },
   exit: {
     opacity: 0,
-    y: -12,
-    filter: 'blur(3px)',
-    transition: { duration: 0.25, ease: [0.4, 0, 0.6, 1] }
+    y: -8,
+    transition: { duration: 0.2, ease: 'easeIn' as const }
   }
 };
 

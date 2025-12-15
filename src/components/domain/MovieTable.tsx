@@ -1,8 +1,38 @@
-import { useState } from 'react';
+import { useState, MouseEvent } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { getImageUrl } from '../../api/tmdb';
-import { useWishlist } from '../../hooks/useWishlist.jsx';
+import { useWishlist } from '../../hooks/useWishlist';
 import MovieDetailModal from './MovieDetailModal';
+import type { Movie, SortField } from '../../types';
+
+interface MovieTableProps {
+  movies: Movie[];
+  onSort?: (field: SortField) => void;
+  sortField?: SortField;
+  sortOrder?: 'asc' | 'desc';
+  onMovieClick?: (movie: Movie) => void;
+}
+
+interface TableHeaderProps {
+  $sortable?: boolean;
+  $sorted?: boolean;
+}
+
+interface SortIconProps {
+  $active?: boolean;
+}
+
+interface TableRowProps {
+  $delay?: number;
+}
+
+interface RatingBadgeProps {
+  $rating: number;
+}
+
+interface WishlistButtonProps {
+  $isActive?: boolean;
+}
 
 const TableContainer = styled.div`
   width: 100%;
@@ -35,7 +65,7 @@ const TableHead = styled.thead`
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 `;
 
-const TableHeader = styled.th`
+const TableHeader = styled.th<TableHeaderProps>`
   padding: 16px 12px;
   text-align: left;
   color: #fff;
@@ -54,7 +84,7 @@ const TableHeader = styled.th`
   `}
 `;
 
-const SortIcon = styled.span`
+const SortIcon = styled.span<SortIconProps>`
   margin-left: 6px;
   font-size: 10px;
   opacity: ${props => props.$active ? 1 : 0.3};
@@ -77,7 +107,7 @@ const shuffleIn = keyframes`
   }
 `;
 
-const TableRow = styled.tr`
+const TableRow = styled.tr<TableRowProps>`
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   transition: background 0.2s, transform 0.2s, box-shadow 0.2s;
   animation: ${shuffleIn} 0.45s ease forwards;
@@ -146,19 +176,19 @@ const MovieOverview = styled.div`
   overflow: hidden;
 `;
 
-const RatingBadge = styled.span`
+const RatingBadge = styled.span<RatingBadgeProps>`
   display: inline-flex;
   align-items: center;
   gap: 4px;
   padding: 4px 8px;
   background: ${props => {
-    const rating = parseFloat(props.$rating);
+    const rating = props.$rating;
     if (rating >= 8) return 'rgba(70, 211, 105, 0.2)';
     if (rating >= 6) return 'rgba(255, 193, 7, 0.2)';
     return 'rgba(229, 9, 20, 0.2)';
   }};
   color: ${props => {
-    const rating = parseFloat(props.$rating);
+    const rating = props.$rating;
     if (rating >= 8) return '#46d369';
     if (rating >= 6) return '#ffc107';
     return '#e50914';
@@ -168,7 +198,7 @@ const RatingBadge = styled.span`
   font-size: 13px;
 `;
 
-const WishlistButton = styled.button`
+const WishlistButton = styled.button<WishlistButtonProps>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -189,39 +219,28 @@ const WishlistButton = styled.button`
   }
 `;
 
-const GenreBadge = styled.span`
-  display: inline-block;
-  padding: 3px 8px;
-  background: rgba(255, 255, 255, 0.1);
-  color: #b3b3b3;
-  border-radius: 4px;
-  font-size: 11px;
-  margin-right: 4px;
-  margin-bottom: 4px;
-`;
-
 const MovieTable = ({ 
   movies, 
   onSort, 
   sortField, 
   sortOrder,
   onMovieClick 
-}) => {
+}: MovieTableProps) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const [imageErrors, setImageErrors] = useState({});
-  const [selectedMovie, setSelectedMovie] = useState(null);
+  const [imageErrors, setImageErrors] = useState<Record<number, boolean>>({});
+  const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-  const handleSort = (field) => {
-    if (onSort) {
-      onSort(field);
+  const handleSort = (field: string) => {
+    if (onSort && ['title', 'release_date', 'vote_average', 'vote_count', 'popularity'].includes(field)) {
+      onSort(field as SortField);
     }
   };
 
-  const handleImageError = (movieId) => {
+  const handleImageError = (movieId: number) => {
     setImageErrors(prev => ({ ...prev, [movieId]: true }));
   };
 
-  const getSortIcon = (field) => {
+  const getSortIcon = (field: string) => {
     if (sortField !== field) return '↕';
     return sortOrder === 'asc' ? '↑' : '↓';
   };
@@ -281,17 +300,17 @@ const MovieTable = ({
                       alt={movie.title}
                       loading="lazy"
                       onError={() => handleImageError(movie.id)}
-                      onClick={(e) => { e.stopPropagation(); setSelectedMovie(movie); }}
+                      onClick={(e: MouseEvent) => { e.stopPropagation(); setSelectedMovie(movie); }}
                     />
                   ) : (
-                    <PosterPlaceholder onClick={(e) => { e.stopPropagation(); setSelectedMovie(movie); }}>
+                    <PosterPlaceholder onClick={(e: MouseEvent) => { e.stopPropagation(); setSelectedMovie(movie); }}>
                       🎬
                     </PosterPlaceholder>
                   )}
                 </PosterCell>
                 
                 <TitleCell 
-                  onClick={(e) => { e.stopPropagation(); setSelectedMovie(movie); onMovieClick?.(movie); }} 
+                  onClick={(e: MouseEvent) => { e.stopPropagation(); setSelectedMovie(movie); onMovieClick?.(movie); }} 
                   style={{ cursor: 'pointer' }}
                 >
                   <MovieTitle>{movie.title}</MovieTitle>
@@ -301,7 +320,7 @@ const MovieTable = ({
                 <TableCell>{releaseYear}</TableCell>
                 
                 <TableCell>
-                  <RatingBadge $rating={movie.vote_average}>
+                  <RatingBadge $rating={movie.vote_average || 0}>
                     ⭐ {movie.vote_average?.toFixed(1) || 'N/A'}
                   </RatingBadge>
                 </TableCell>
@@ -317,7 +336,7 @@ const MovieTable = ({
                 <TableCell>
                   <WishlistButton
                     $isActive={isWishlisted}
-                    onClick={(e) => {
+                    onClick={(e: MouseEvent) => {
                       e.stopPropagation();
                       toggleWishlist(movie);
                     }}

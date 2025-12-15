@@ -1,8 +1,8 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
-import { AuthProvider } from './hooks/useAuth.jsx';
-import { WishlistProvider } from './hooks/useWishlist.jsx';
+import { AuthProvider } from './hooks/useAuth';
+import { WishlistProvider } from './hooks/useWishlist';
 import { ToastContainer } from 'react-toastify';
 import { AnimatePresence, motion } from 'framer-motion';
 import 'react-toastify/dist/ReactToastify.css';
@@ -96,7 +96,7 @@ function App() {
     <Provider store={store}>
       <AuthProvider>
         <WishlistProvider>
-          <BrowserRouter>
+          <BrowserRouter basename="/NetflixClone">
             <PageTransition />
             <ToastContainer position="top-right" autoClose={4000} hideProgressBar={false} newestOnTop />
           </BrowserRouter>
@@ -107,3 +107,4 @@ function App() {
 }
 
 export default App;
+

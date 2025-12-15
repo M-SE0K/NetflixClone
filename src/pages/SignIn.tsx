@@ -4,7 +4,7 @@ import styled, { keyframes } from 'styled-components';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useAuth } from '../hooks/useAuth.jsx';
+import { useAuth } from '../hooks/useAuth';
 
 // 애니메이션 정의
 const fadeIn = keyframes`

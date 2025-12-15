@@ -1,15 +1,23 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, ChangeEvent, MouseEvent } from 'react';
 import styled, { keyframes } from 'styled-components';
 import Header from '../components/common/Header';
 import MovieTable from '../components/domain/MovieTable';
 import MovieGrid from '../components/domain/MovieGrid';
-import { useWishlist } from '../hooks/useWishlist.jsx';
-import { getImageUrl } from '../api/tmdb';
+import { useWishlist } from '../hooks/useWishlist';
+import type { Movie, SortField, ViewMode } from '../types';
 
 /**
  * ⚠️ 중요: 이 페이지에서는 API를 호출하면 안됩니다!
  * Local Storage에 저장된 데이터만 사용합니다.
  */
+
+interface ViewButtonProps {
+  $isActive: boolean;
+}
+
+interface ModalButtonProps {
+  $primary?: boolean;
+}
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -90,7 +98,7 @@ const ViewToggle = styled.div`
   overflow: hidden;
 `;
 
-const ViewButton = styled.button`
+const ViewButton = styled.button<ViewButtonProps>`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -256,7 +264,7 @@ const ModalButtons = styled.div`
   justify-content: center;
 `;
 
-const ModalButton = styled.button`
+const ModalButton = styled.button<ModalButtonProps>`
   padding: 12px 24px;
   border-radius: 4px;
   font-size: 14px;
@@ -283,8 +291,8 @@ const ModalButton = styled.button`
 `;
 
 const VIEW_MODES = {
-  GRID: 'grid',
-  TABLE: 'table'
+  GRID: 'grid' as ViewMode,
+  TABLE: 'table' as ViewMode
 };
 
 const SORT_OPTIONS = [
@@ -295,47 +303,41 @@ const SORT_OPTIONS = [
 ];
 
 const Wishlist = () => {
-  // ⚠️ API 호출 없이 Local Storage에서만 데이터 가져옴
   const { wishlist, clearWishlist, wishlistCount } = useWishlist();
   
-  const [viewMode, setViewMode] = useState(VIEW_MODES.GRID);
-  const [sortField, setSortField] = useState('addedAt');
-  const [sortOrder, setSortOrder] = useState('desc');
+  const [viewMode, setViewMode] = useState<ViewMode>(VIEW_MODES.GRID);
+  const [sortField, setSortField] = useState<string>('addedAt');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [showClearModal, setShowClearModal] = useState(false);
 
-  // 정렬된 위시리스트
   const sortedWishlist = useMemo(() => {
     if (!wishlist || wishlist.length === 0) return [];
     
     return [...wishlist].sort((a, b) => {
-      let aVal = a[sortField];
-      let bVal = b[sortField];
+      let aVal: string | number = (a as Record<string, unknown>)[sortField] as string | number;
+      let bVal: string | number = (b as Record<string, unknown>)[sortField] as string | number;
 
-      // 문자열 정렬 (제목)
       if (sortField === 'title') {
-        aVal = aVal?.toLowerCase() || '';
-        bVal = bVal?.toLowerCase() || '';
+        aVal = (aVal as string)?.toLowerCase() || '';
+        bVal = (bVal as string)?.toLowerCase() || '';
         return sortOrder === 'asc' 
-          ? aVal.localeCompare(bVal, 'ko')
-          : bVal.localeCompare(aVal, 'ko');
+          ? (aVal as string).localeCompare(bVal as string, 'ko')
+          : (bVal as string).localeCompare(aVal as string, 'ko');
       }
 
-      // 날짜 정렬
       if (sortField === 'release_date' || sortField === 'addedAt') {
         aVal = new Date(aVal || 0).getTime();
         bVal = new Date(bVal || 0).getTime();
       }
 
-      // 숫자 정렬
       aVal = aVal || 0;
       bVal = bVal || 0;
 
-      return sortOrder === 'asc' ? aVal - bVal : bVal - aVal;
+      return sortOrder === 'asc' ? (aVal as number) - (bVal as number) : (bVal as number) - (aVal as number);
     });
   }, [wishlist, sortField, sortOrder]);
 
-  // 테이블 정렬 핸들러
-  const handleSort = (field) => {
+  const handleSort = (field: SortField) => {
     if (sortField === field) {
       setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc');
     } else {
@@ -344,8 +346,7 @@ const Wishlist = () => {
     }
   };
 
-  // 드롭다운 정렬 변경
-  const handleSortChange = (e) => {
+  const handleSortChange = (e: ChangeEvent<HTMLSelectElement>) => {
     setSortField(e.target.value);
     setSortOrder('desc');
   };
@@ -359,12 +360,10 @@ const Wishlist = () => {
     setShowClearModal(false);
   };
 
-  const handleMovieClick = (movie) => {
+  const handleMovieClick = (movie: Movie) => {
     console.log('Movie clicked:', movie);
-    // TODO: 모달 또는 상세 페이지 연결
   };
 
-  // 빈 상태
   if (wishlistCount === 0) {
     return (
       <PageContainer>
@@ -438,14 +437,12 @@ const Wishlist = () => {
           </RightControls>
         </ControlsContainer>
 
-        {/* 콘텐츠 */}
         {viewMode === VIEW_MODES.GRID ? (
           <MovieGrid
             movies={sortedWishlist}
             isLoading={false}
             isLoadingMore={false}
             hasMore={false}
-            loadMoreRef={null}
             onMovieClick={handleMovieClick}
             emptyMessage="찜한 영화가 없습니다."
           />
@@ -453,17 +450,16 @@ const Wishlist = () => {
           <MovieTable
             movies={sortedWishlist}
             onSort={handleSort}
-            sortField={sortField}
+            sortField={sortField as SortField}
             sortOrder={sortOrder}
             onMovieClick={handleMovieClick}
           />
         )}
       </MainContent>
 
-      {/* 전체 삭제 확인 모달 */}
       {showClearModal && (
         <ConfirmModal onClick={() => setShowClearModal(false)}>
-          <ModalContent onClick={(e) => e.stopPropagation()}>
+          <ModalContent onClick={(e: MouseEvent) => e.stopPropagation()}>
             <ModalTitle>정말 삭제하시겠습니까?</ModalTitle>
             <ModalText>
               찜한 모든 영화({wishlistCount}개)가 삭제됩니다.

@@ -3,13 +3,9 @@ import { useState, useEffect } from 'react';
 /**
  * Debounce 커스텀 훅
  * 값이 변경된 후 지정된 시간이 지난 후에만 업데이트된 값을 반환
- * 
- * @param {any} value - 디바운스할 값
- * @param {number} delay - 지연 시간 (밀리초)
- * @returns {any} - 디바운스된 값
  */
-const useDebounce = (value, delay = 500) => {
-  const [debouncedValue, setDebouncedValue] = useState(value);
+function useDebounce<T>(value: T, delay = 500): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
 
   useEffect(() => {
     // 지연 후 값 업데이트
@@ -24,7 +20,7 @@ const useDebounce = (value, delay = 500) => {
   }, [value, delay]);
 
   return debouncedValue;
-};
+}
 
 export default useDebounce;
 

@@ -1,15 +1,18 @@
-import { configureStore, createSlice } from '@reduxjs/toolkit';
+import { configureStore, createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { UIState } from '../types';
+
+const initialState: UIState = {
+  bannerIndex: 0
+};
 
 const uiSlice = createSlice({
   name: 'ui',
-  initialState: {
-    bannerIndex: 0
-  },
+  initialState,
   reducers: {
-    setBannerIndex: (state, action) => {
+    setBannerIndex: (state, action: PayloadAction<number>) => {
       state.bannerIndex = action.payload ?? 0;
     },
-    nextBanner: (state, action) => {
+    nextBanner: (state, action: PayloadAction<number>) => {
       const length = action.payload || 1;
       if (length <= 0) return;
       state.bannerIndex = (state.bannerIndex + 1) % length;
@@ -28,4 +31,7 @@ export const store = configureStore({
   }
 });
 
+// Redux 타입 추론
+export type RootState = ReturnType<typeof store.getState>;
+export type AppDispatch = typeof store.dispatch;
 

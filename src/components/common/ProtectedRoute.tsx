@@ -1,5 +1,6 @@
+import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth.jsx';
+import { useAuth } from '../../hooks/useAuth';
 import styled, { keyframes } from 'styled-components';
 
 // 로딩 애니메이션
@@ -38,11 +39,15 @@ const LoadingText = styled.p`
   animation: ${pulse} 1.5s ease-in-out infinite;
 `;
 
+interface ProtectedRouteProps {
+  children: ReactNode;
+}
+
 /**
  * ProtectedRoute 컴포넌트
  * 인증된 사용자만 접근 가능한 라우트를 보호
  */
-const ProtectedRoute = ({ children }) => {
+const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isLoggedIn, isLoading } = useAuth();
   const location = useLocation();
 
@@ -62,7 +67,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   // 인증된 경우 자식 컴포넌트 렌더링
-  return children;
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

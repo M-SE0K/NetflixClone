@@ -1,7 +1,7 @@
 import { createPortal } from 'react-dom';
 import styled, { keyframes } from 'styled-components';
 import { getImageUrl } from '../../api/tmdb';
-import { useWishlist } from '../../hooks/useWishlist.jsx';
+import { useWishlist } from '../../hooks/useWishlist';
 import {
   Star,
   Flame,
@@ -14,7 +14,21 @@ import {
   Check,
   X
 } from 'lucide-react';
-import { useMemo } from 'react';
+import { useMemo, MouseEvent } from 'react';
+import type { Movie } from '../../types';
+
+interface MovieDetailModalProps {
+  movie: Movie | null;
+  onClose: () => void;
+}
+
+interface PillProps {
+  $type?: 'rating' | 'pop' | 'default';
+}
+
+interface IconButtonProps {
+  $isActive?: boolean;
+}
 
 const pulse = keyframes`
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -56,6 +70,18 @@ const DetailPoster = styled.img`
   background: #222;
 `;
 
+const DetailPosterPlaceholder = styled.div`
+  width: 100%;
+  aspect-ratio: 2/3;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #222;
+  color: #888;
+  font-size: 40px;
+  border-radius: 8px;
+`;
+
 const DetailBody = styled.div`
   display: flex;
   flex-direction: column;
@@ -76,7 +102,7 @@ const PillRow = styled.div`
   gap: 8px;
 `;
 
-const Pill = styled.span`
+const Pill = styled.span<PillProps>`
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -126,7 +152,7 @@ const LinkButton = styled.a`
   }
 `;
 
-const IconButton = styled.button`
+const IconButton = styled.button<IconButtonProps>`
   width: 42px;
   height: 42px;
   border-radius: 50%;
@@ -162,18 +188,9 @@ const CloseButton = styled.button`
   }
 `;
 
-const PendingDot = styled.span`
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #e50914;
-  animation: ${pulse} 1s infinite;
-`;
-
-const MovieDetailModal = ({ movie, onClose }) => {
+const MovieDetailModal = ({ movie, onClose }: MovieDetailModalProps) => {
   const { isInWishlist, toggleWishlist } = useWishlist();
-  const posterUrl = getImageUrl(movie?.poster_path, 'poster', 'large');
+  const posterUrl = getImageUrl(movie?.poster_path ?? null, 'poster', 'large');
   const isWishlisted = movie ? isInWishlist(movie.id) : false;
   const releaseYear = movie?.release_date?.split('-')[0] || '';
   const rating = movie?.vote_average?.toFixed(1) || 'N/A';
@@ -188,23 +205,13 @@ const MovieDetailModal = ({ movie, onClose }) => {
 
   return createPortal(
     <DetailOverlay onClick={onClose}>
-      <DetailContent onClick={(e) => e.stopPropagation()}>
+      <DetailContent onClick={(e: MouseEvent) => e.stopPropagation()}>
         {posterUrl ? (
           <DetailPoster src={posterUrl} alt={movie.title} />
         ) : (
-          <DetailPoster
-            as="div"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              background: '#222',
-              color: '#888',
-              fontSize: '40px',
-            }}
-          >
+          <DetailPosterPlaceholder>
             🎬
-          </DetailPoster>
+          </DetailPosterPlaceholder>
         )}
         <DetailBody>
           <DetailTitle>{movie.title}</DetailTitle>
@@ -240,7 +247,7 @@ const MovieDetailModal = ({ movie, onClose }) => {
             </LinkButton>
             <IconButton
               $isActive={isWishlisted}
-              onClick={(e) => {
+              onClick={(e: MouseEvent) => {
                 e.stopPropagation();
                 toggleWishlist(movie);
               }}

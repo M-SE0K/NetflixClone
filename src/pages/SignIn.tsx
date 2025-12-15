@@ -1,10 +1,22 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
+
+// 모바일 감지 훅
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth <= 960);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  return isMobile;
+};
 
 // 애니메이션 정의
 const fadeIn = keyframes`
@@ -60,7 +72,7 @@ const starFieldMove = keyframes`
 
 // 폼 전환용 모션 variants
 const formVariants = {
-  initial: (isLogin) => ({
+  initial: () => ({
     opacity: 0,
     y: 12,
     scale: 0.99,
@@ -72,18 +84,18 @@ const formVariants = {
     scale: 1,
     filter: 'blur(0px)',
     transition: {
-      duration: 0.45,
-      ease: [0.25, 0.1, 0.25, 1],
+      duration: 1,
+      ease: [0.4, 0, 0.2, 1],
     }
   },
-  exit: (isLogin) => ({
+  exit: (isLogin: boolean) => ({
     opacity: 0,
     y: isLogin ? -12 : 12,
     scale: 0.99,
     filter: 'blur(2px)',
     transition: {
-      duration: 0.35,
-      ease: [0.4, 0, 0.6, 1]
+      duration: 0.5,
+      ease: [0.4, 0, 0.2, 1]
     }
   })
 };
@@ -142,7 +154,7 @@ const Container = styled.div`
   }
 `;
 
-const Stage = styled.div`
+const Stage = styled.div<{ $isMobile?: boolean }>`
   position: relative;
   width: min(1120px, 98vw);
   min-height: 660px;
@@ -157,14 +169,20 @@ const Stage = styled.div`
   overflow: hidden;
   backdrop-filter: blur(12px);
   padding: 40px;
+  
   @media (max-width: 960px) {
     flex-direction: column;
-    min-height: 760px;
-    padding: 0;
+    width: 95vw;
+    height: calc(100vh - 32px);
+    min-height: auto;
+    max-height: calc(100vh - 32px);
+    padding: 16px;
+    gap: 16px;
+    border-radius: 16px;
   }
 `;
 
-const SlidePanel = styled(motion.div)`
+const SlidePanel = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
   position: relative;
   flex: 1 1 50%;
   min-width: 0;
@@ -209,9 +227,13 @@ const SlidePanel = styled(motion.div)`
   }
 
   @media (max-width: 960px) {
+    flex: 0 0 auto;
     width: 100%;
-    min-height: 240px;
-    height: 240px;
+    height: 120px;
+    min-height: 120px;
+    margin: 0;
+    border-radius: 12px;
+    order: ${props => props.$isLoginMode ? 0 : 1};
   }
 `;
 
@@ -233,6 +255,11 @@ const SlideContent = styled.div`
   flex-direction: column;
   gap: 14px;
   align-items: center;
+
+  @media (max-width: 960px) {
+    padding: 12px;
+    gap: 8px;
+  }
 `;
 
 const SlideTitle = styled.h3`
@@ -240,6 +267,10 @@ const SlideTitle = styled.h3`
   font-weight: 800;
   letter-spacing: 0.3px;
   margin: 0;
+
+  @media (max-width: 960px) {
+    font-size: 18px;
+  }
 `;
 
 const SlideText = styled.p`
@@ -248,6 +279,10 @@ const SlideText = styled.p`
   color: #f4f4f4;
   font-size: 15px;
   max-width: 320px;
+
+  @media (max-width: 960px) {
+    display: none;
+  }
 `;
 
 const SlideButton = styled.button`
@@ -269,6 +304,12 @@ const SlideButton = styled.button`
     color: rgb(0, 0, 0);
     border-color: rgba(0, 0, 0, 0.25);
   }
+
+  @media (max-width: 960px) {
+    padding: 10px 20px;
+    font-size: 13px;
+    margin-top: 0;
+  }
 `;
 
 const FloatingDot = styled.div`
@@ -282,7 +323,7 @@ const FloatingDot = styled.div`
   animation: ${twinkle} ${props => props.$duration || 6}s ease-in-out infinite;
 `;
 
-const FormColumn = styled(motion.div)`
+const FormColumn = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
   flex: 1 1 50%;
   min-width: 0;
   display: flex;
@@ -294,10 +335,13 @@ const FormColumn = styled(motion.div)`
   will-change: transform;
 
   @media (max-width: 960px) {
+    flex: 1 1 auto;
     width: 100%;
     min-width: auto;
-    padding: clamp(18px, 4vw, 36px);
-    margin-top: 12px;
+    padding: 0;
+    margin: 0;
+    overflow-y: auto;
+    order: ${props => props.$isLoginMode ? 1 : 0};
   }
 `;
 
@@ -333,11 +377,14 @@ const FormWrapper = styled.div`
     z-index: 1;
   }
 
-  @media (max-width: 740px) {
-    padding: 32px 24px 32px;
+  @media (max-width: 960px) {
+    padding: 20px 16px;
     max-width: 100%;
     background: rgba(0, 0, 0, 0.75);
     min-height: auto;
+    height: 100%;
+    border-radius: 12px;
+    justify-content: flex-start;
   }
 `;
 
@@ -350,6 +397,11 @@ const Logo = styled.div`
   margin-bottom: 30px;
   letter-spacing: 2px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+
+  @media (max-width: 960px) {
+    font-size: 1.8rem;
+    margin-bottom: 12px;
+  }
 `;
 
 const Title = styled.h1`
@@ -358,19 +410,28 @@ const Title = styled.h1`
   font-weight: 700;
   margin-bottom: 28px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  @media (max-width: 960px) {
+    font-size: 22px;
+    margin-bottom: 16px;
+  }
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 16px;
+
+  @media (max-width: 960px) {
+    gap: 10px;
+  }
 `;
 
 const InputGroup = styled.div`
   position: relative;
 `;
 
-const Input = styled.input`
+const Input = styled.input<{ $hasError?: boolean }>`
   width: 100%;
   padding: 18px 22px;
   margin-bottom: 10px;
@@ -390,6 +451,12 @@ const Input = styled.input`
 
   &::placeholder {
     color: #8c8c8c;
+  }
+
+  @media (max-width: 960px) {
+    padding: 14px 16px;
+    font-size: 14px;
+    margin-bottom: 6px;
   }
 `;
 
@@ -429,6 +496,12 @@ const SubmitButton = styled.button`
     cursor: not-allowed;
     transform: none;
   }
+
+  @media (max-width: 960px) {
+    padding: 12px;
+    font-size: 14px;
+    margin-top: 16px;
+  }
 `;
 
 const LoadingSpinner = styled.div`
@@ -452,6 +525,10 @@ const CheckboxWrapper = styled.div`
   align-items: center;
   gap: 8px;
   margin-top: 12px;
+
+  @media (max-width: 960px) {
+    margin-top: 8px;
+  }
 `;
 
 const Checkbox = styled.input`
@@ -473,6 +550,11 @@ const SwitchText = styled.p`
   font-size: 16px;
   margin-top: 24px;
   text-align: center;
+
+  @media (max-width: 960px) {
+    font-size: 13px;
+    margin-top: 12px;
+  }
 `;
 
 const SwitchLink = styled.span`
@@ -509,15 +591,24 @@ const InfoBox = styled.div`
       text-decoration: underline;
     }
   }
+
+  @media (max-width: 960px) {
+    display: none;
+  }
 `;
 
 // 약관 동의 관련 스타일
-const TermsSection = styled.div`
+const TermsSection = styled.div<{ $hasError?: boolean }>`
   margin-top: 16px;
   padding: 16px;
   background: rgba(255, 255, 255, 0.03);
   border-radius: 4px;
   border: 1px solid ${props => props.$hasError ? '#e87c03' : 'rgba(255, 255, 255, 0.1)'};
+
+  @media (max-width: 960px) {
+    margin-top: 10px;
+    padding: 12px;
+  }
 `;
 
 const TermsTitle = styled.p`
@@ -781,6 +872,7 @@ const TERMS_DATA = {
 const SignIn = () => {
   const navigate = useNavigate();
   const { login, register, isLoading } = useAuth();
+  const isMobile = useIsMobile();
   
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [formData, setFormData] = useState({
@@ -947,13 +1039,30 @@ const SignIn = () => {
     : '빠른 로그인으로 다시 이어보세요. TMDB API Key를 비밀번호 칸에 입력하세요.';
   const slideCta = isLoginMode ? '회원가입으로 전환' : '로그인으로 전환';
 
+  // 모바일/데스크톱 애니메이션 분기
+  const slidePanelAnimation = isMobile
+    ? { y: isLoginMode ? 0 : 20, opacity: 1 }
+    : { x: isLoginMode ? '0%' : '100%' };
+
+  const formColumnAnimation = isMobile
+    ? { y: isLoginMode ? 0 : -20, opacity: 1 }
+    : { x: isLoginMode ? '0%' : '-100%' };
+
+  const transitionConfig = {
+    type: 'tween',
+    duration: 1,
+    ease: [0.4, 0, 0.2, 1]
+  };
+
   return (
     <Container>
-      <Stage>
+      <Stage $isMobile={isMobile}>
         <SlidePanel
           initial={false}
-          animate={{ x: isLoginMode ? '0%' : '100%' }}
-          transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+          animate={slidePanelAnimation}
+          transition={transitionConfig}
+          $isMobile={isMobile}
+          $isLoginMode={isLoginMode}
         >
           <SlideOverlay />
           <FloatingDot style={{ top: '18%', left: '16%' }} $size={12} $duration={7} />
@@ -970,8 +1079,10 @@ const SignIn = () => {
 
         <FormColumn
           initial={false}
-          animate={{ x: isLoginMode ? '0%' : '-100%' }}
-          transition={{ type: 'spring', stiffness: 200, damping: 22 }}
+          animate={formColumnAnimation}
+          transition={transitionConfig}
+          $isMobile={isMobile}
+          $isLoginMode={isLoginMode}
         >
           <FormWrapper>
             <Logo>M-FLIX</Logo>

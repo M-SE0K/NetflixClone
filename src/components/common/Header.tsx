@@ -1,11 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, MouseEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import styled from 'styled-components';
-import { useAuth } from '../hooks/useAuth.jsx';
-import { useWishlist } from '../hooks/useWishlist.jsx';
-import { Search, Heart, LogOut, Menu, X } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import { useWishlist } from '../../hooks/useWishlist';
+import { Search, Heart, Menu, X } from 'lucide-react';
 
-const HeaderContainer = styled.header`
+interface StyledProps {
+  $isScrolled?: boolean;
+  $isActive?: boolean;
+  $isOpen?: boolean;
+}
+
+const HeaderContainer = styled.header<StyledProps>`
   position: fixed;
   top: 0;
   left: 0;
@@ -60,7 +66,7 @@ const Nav = styled.nav`
   }
 `;
 
-const NavLink = styled(Link)`
+const NavLink = styled(Link)<StyledProps>`
   color: ${props => props.$isActive ? '#fff' : '#b3b3b3'};
   font-size: 14px;
   font-weight: ${props => props.$isActive ? '600' : '400'};
@@ -185,13 +191,13 @@ const UserAvatar = styled.div`
   font-weight: 700;
 `;
 
-const DropdownArrow = styled.span`
+const DropdownArrow = styled.span<StyledProps>`
   font-size: 10px;
   transition: transform 0.2s;
   transform: ${props => props.$isOpen ? 'rotate(180deg)' : 'rotate(0)'};
 `;
 
-const Dropdown = styled.div`
+const Dropdown = styled.div<StyledProps>`
   position: absolute;
   top: 100%;
   right: 0;
@@ -250,7 +256,7 @@ const MobileMenuButton = styled.button`
   }
 `;
 
-const MobileMenu = styled.div`
+const MobileMenu = styled.div<StyledProps>`
   display: none;
   position: fixed;
   top: 56px;
@@ -270,10 +276,9 @@ const MobileMenu = styled.div`
     gap: 16px;
     z-index: 3;
   }
-  
 `;
 
-const MobileNavLink = styled(Link)`
+const MobileNavLink = styled(Link)<StyledProps>`
   color: ${props => props.$isActive ? '#fff' : '#b3b3b3'};
   font-size: 16px;
   padding: 12px 0;
@@ -328,7 +333,7 @@ const Header = () => {
     <>
       <HeaderContainer $isScrolled={isScrolled}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <Logo to="/">NETFLEX</Logo>
+          <Logo to="/">M-FLIX</Logo>
           <Nav>
             {navItems.map(item => (
               <NavLink 
@@ -395,19 +400,19 @@ const Header = () => {
           as="button"
           onClick={handleLogout}
           style={{ color: '#e50914' }}
-          onMouseEnter={(e) => {
+          onMouseEnter={(e: MouseEvent<HTMLButtonElement>) => {
             e.currentTarget.style.background = '#e50914';
             e.currentTarget.style.color = 'rgb(255, 255, 255)';
           }}
-          onMouseLeave={(e) => {
+          onMouseLeave={(e: MouseEvent<HTMLButtonElement>) => {
             e.currentTarget.style.background = 'transparent';
             e.currentTarget.style.color = '#e50914';
           }}
-          onMouseDown={(e) => {
+          onMouseDown={(e: MouseEvent<HTMLButtonElement>) => {
             e.currentTarget.style.background = '#e50914';
             e.currentTarget.style.color = 'rgb(255, 255, 255)';
           }}
-          onMouseUp={(e) => {
+          onMouseUp={(e: MouseEvent<HTMLButtonElement>) => {
             e.currentTarget.style.background = '#e50914';
             e.currentTarget.style.color = 'rgb(255, 255, 255)';
           }}

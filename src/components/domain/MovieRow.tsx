@@ -1,6 +1,18 @@
 import { useState, useRef } from 'react';
 import styled from 'styled-components';
 import MovieCard from './MovieCard';
+import type { Movie } from '../../types';
+
+interface MovieRowProps {
+  title: string;
+  movies: Movie[];
+  isLargeRow?: boolean;
+  onMovieClick?: (movie: Movie) => void;
+}
+
+interface SliderButtonProps {
+  $direction: 'left' | 'right';
+}
 
 const RowContainer = styled.div`
   margin-bottom: 40px;
@@ -85,7 +97,7 @@ const SliderContainer = styled.div`
   }
 `;
 
-const SliderButton = styled.button`
+const SliderButton = styled.button<SliderButtonProps>`
   position: absolute;
   top: 50%;
   transform: translateY(-50%);
@@ -123,8 +135,8 @@ const SliderButton = styled.button`
   }
 `;
 
-const MovieRow = ({ title, movies, isLargeRow = false, onMovieClick }) => {
-  const sliderRef = useRef(null);
+const MovieRow = ({ title, movies, isLargeRow = false, onMovieClick }: MovieRowProps) => {
+  const sliderRef = useRef<HTMLDivElement>(null);
   const [showLeftButton, setShowLeftButton] = useState(false);
   const [showRightButton, setShowRightButton] = useState(true);
 
@@ -136,7 +148,7 @@ const MovieRow = ({ title, movies, isLargeRow = false, onMovieClick }) => {
     }
   };
 
-  const scroll = (direction) => {
+  const scroll = (direction: 'left' | 'right') => {
     if (sliderRef.current) {
       const cardWidth = isLargeRow ? 208 : 168;
       const scrollAmount = cardWidth * 4;

@@ -1,4 +1,27 @@
+import { ChangeEvent } from 'react';
 import styled from 'styled-components';
+import type { Genre } from '../../types';
+
+interface PopularFiltersProps {
+  totalResults: number;
+  minRating: number;
+  onMinRatingChange: (e: ChangeEvent<HTMLSelectElement>) => void;
+  genres: Genre[];
+  selectedGenres: number[];
+  isGenreLoading: boolean;
+  onGenreToggle: (genreId: number) => void;
+  onRefresh: () => void;
+  onReset: () => void;
+  isLoading: boolean;
+}
+
+interface GenreButtonProps {
+  $isActive: boolean;
+}
+
+interface ButtonProps {
+  $primary?: boolean;
+}
 
 const FilterSection = styled.div`
   margin: 10px 0 14px;
@@ -22,7 +45,7 @@ const GenreList = styled.div`
   gap: 8px;
 `;
 
-const GenreButton = styled.button`
+const GenreButton = styled.button<GenreButtonProps>`
   padding: 8px 12px;
   border-radius: 999px;
   border: 1px solid ${props => props.$isActive ? '#e50914' : 'rgba(255,255,255,0.15)'};
@@ -70,7 +93,7 @@ const ResultInfo = styled.div`
   }
 `;
 
-const Button = styled.button`
+const Button = styled.button<ButtonProps>`
   display: flex;
   align-items: center;
   gap: 6px;
@@ -105,7 +128,7 @@ const PopularFilters = ({
   onRefresh,
   onReset,
   isLoading
-}) => {
+}: PopularFiltersProps) => {
   return (
     <FilterSection>
       <LeftGroup>

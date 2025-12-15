@@ -1,5 +1,21 @@
 import styled, { keyframes } from 'styled-components';
 import MovieCard from './MovieCard';
+import type { Movie } from '../../types';
+
+interface MovieGridProps {
+  movies: Movie[];
+  isLoading?: boolean;
+  isLoadingMore?: boolean;
+  hasMore?: boolean;
+  loadMoreRef?: (node: HTMLDivElement | null) => void;
+  onMovieClick?: (movie: Movie) => void;
+  emptyMessage?: string;
+}
+
+interface GridItemProps {
+  $delay: number;
+  $tilt: number;
+}
 
 const shuffleIn = keyframes`
   0% {
@@ -33,7 +49,7 @@ const GridContainer = styled.div`
   }
 `;
 
-const GridItem = styled.div`
+const GridItem = styled.div<GridItemProps>`
   animation: ${shuffleIn} 0.5s ease forwards;
   animation-delay: ${props => props.$delay}ms;
   opacity: 0;
@@ -108,13 +124,13 @@ const EmptyText = styled.p`
 
 const MovieGrid = ({ 
   movies, 
-  isLoading, 
-  isLoadingMore, 
-  hasMore, 
+  isLoading = false, 
+  isLoadingMore = false, 
+  hasMore = false, 
   loadMoreRef,
   onMovieClick,
   emptyMessage = '영화가 없습니다.'
-}) => {
+}: MovieGridProps) => {
   if (!isLoading && (!movies || movies.length === 0)) {
     return (
       <GridContainer>

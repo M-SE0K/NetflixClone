@@ -4,7 +4,7 @@ import styled, { keyframes } from 'styled-components';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useAuth } from '../hooks/useAuth.jsx';
+import { useAuth } from '../hooks/useAuth';
 
 // 애니메이션 정의
 const fadeIn = keyframes`
@@ -729,7 +729,7 @@ const TERMS_DATA = {
     title: '이용약관',
     content: `
       <h3>제1조 (목적)</h3>
-      <p>이 약관은 NETFLEX(이하 "회사")가 제공하는 서비스의 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임 사항, 기타 필요한 사항을 규정함을 목적으로 합니다.</p>
+      <p>이 약관은 M-FLIX(이하 "회사")가 제공하는 서비스의 이용과 관련하여 회사와 회원 간의 권리, 의무 및 책임 사항, 기타 필요한 사항을 규정함을 목적으로 합니다.</p>
       
       <h3>제2조 (정의)</h3>
       <p>이 약관에서 사용하는 용어의 정의는 다음과 같습니다.</p>
@@ -974,7 +974,7 @@ const SignIn = () => {
           transition={{ type: 'spring', stiffness: 200, damping: 22 }}
         >
           <FormWrapper>
-            <Logo>NETFLEX</Logo>
+            <Logo>M-FLIX</Logo>
             <Title>{isLoginMode ? '로그인' : '회원가입'}</Title>
             
             <Form onSubmit={handleSubmit}>

@@ -1,28 +1,49 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import type { TMDBResponse, Movie } from '../types';
+
+interface UseInfiniteScrollOptions {
+  initialPage?: number;
+  threshold?: number;
+  enabled?: boolean;
+}
+
+interface UseInfiniteScrollReturn {
+  data: Movie[];
+  isLoading: boolean;
+  isLoadingMore: boolean;
+  error: string | null;
+  hasMore: boolean;
+  page: number;
+  totalPages: number;
+  totalResults: number;
+  loadMoreRef: (node: HTMLDivElement | null) => void;
+  loadMore: () => Promise<void>;
+  refresh: () => void;
+  setData: React.Dispatch<React.SetStateAction<Movie[]>>;
+}
 
 /**
  * 무한 스크롤 커스텀 훅
- * @param {Function} fetchFunction - 데이터를 가져오는 함수 (page를 인자로 받음)
- * @param {Object} options - 옵션 설정
- * @returns {Object} - 데이터, 로딩 상태, 에러, 참조 등
  */
-const useInfiniteScroll = (fetchFunction, options = {}) => {
+const useInfiniteScroll = (
+  fetchFunction: (page: number) => Promise<TMDBResponse<Movie>>,
+  options: UseInfiniteScrollOptions = {}
+): UseInfiniteScrollReturn => {
   const {
     initialPage = 1,
-    threshold = 0.8, // 화면의 80% 스크롤 시 다음 페이지 로드
     enabled = true
   } = options;
 
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<Movie[]>([]);
   const [page, setPage] = useState(initialPage);
   const [hasMore, setHasMore] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [totalPages, setTotalPages] = useState(0);
   const [totalResults, setTotalResults] = useState(0);
 
-  const observerRef = useRef(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   // 데이터 초기 로드
   const loadInitialData = useCallback(async () => {
@@ -39,7 +60,7 @@ const useInfiniteScroll = (fetchFunction, options = {}) => {
       setHasMore(initialPage < (result.total_pages || 0));
       setPage(initialPage);
     } catch (err) {
-      setError(err.message || '데이터를 불러오는데 실패했습니다.');
+      setError((err as Error).message || '데이터를 불러오는데 실패했습니다.');
     } finally {
       setIsLoading(false);
     }
@@ -59,7 +80,7 @@ const useInfiniteScroll = (fetchFunction, options = {}) => {
       setPage(nextPage);
       setHasMore(nextPage < (result.total_pages || 0));
     } catch (err) {
-      setError(err.message || '추가 데이터를 불러오는데 실패했습니다.');
+      setError((err as Error).message || '추가 데이터를 불러오는데 실패했습니다.');
     } finally {
       setIsLoadingMore(false);
     }
@@ -75,14 +96,14 @@ const useInfiniteScroll = (fetchFunction, options = {}) => {
   }, [loadInitialData, initialPage]);
 
   // Intersection Observer (callback ref 방식)
-  const loadMoreRef = useCallback((node) => {
+  const loadMoreRef = useCallback((node: HTMLDivElement | null) => {
     if (observerRef.current) {
       observerRef.current.disconnect();
     }
 
     if (!enabled || !node) return;
 
-    const options = {
+    const observerOptions: IntersectionObserverInit = {
       root: null,
       rootMargin: '100px',
       threshold: 0
@@ -93,7 +114,7 @@ const useInfiniteScroll = (fetchFunction, options = {}) => {
       if (entry.isIntersecting && hasMore && !isLoadingMore) {
         loadMore();
       }
-    }, options);
+    }, observerOptions);
 
     observer.observe(node);
     observerRef.current = observer;

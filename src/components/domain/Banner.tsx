@@ -1,8 +1,19 @@
 import { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { AnimatePresence, motion } from 'framer-motion';
-import { getImageUrl } from '../api/tmdb';
-import { useWishlist } from '../hooks/useWishlist.jsx';
+import { getImageUrl } from '../../api/tmdb';
+import { useWishlist } from '../../hooks/useWishlist';
+import type { Movie } from '../../types';
+
+interface BannerProps {
+  movie: Movie | null;
+}
+
+interface StyledProps {
+  $imageUrl?: string;
+  $loaded?: boolean;
+  $isActive?: boolean;
+}
 
 const fadeIn = keyframes`
   from { opacity: 0; }
@@ -38,7 +49,7 @@ const BannerContainer = styled.div`
   }
 `;
 
-const BackgroundImage = styled(motion.div)`
+const BackgroundImage = styled(motion.div)<StyledProps>`
   position: absolute;
   top: 0;
   left: 0;
@@ -220,7 +231,7 @@ const InfoButton = styled(Button)`
   }
 `;
 
-const WishlistButton = styled(Button)`
+const WishlistButton = styled(Button)<StyledProps>`
   background: ${props => props.$isActive ? '#e50914' : 'rgba(109, 109, 110, 0.7)'};
   color: #fff;
   min-width: 48px;
@@ -232,11 +243,11 @@ const WishlistButton = styled(Button)`
   }
 `;
 
-const Banner = ({ movie }) => {
+const Banner = ({ movie }: BannerProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const { isInWishlist, toggleWishlist } = useWishlist();
 
-  const imageUrl = getImageUrl(movie?.backdrop_path, 'backdrop', 'original');
+  const imageUrl = getImageUrl(movie?.backdrop_path ?? null, 'backdrop', 'original');
   const isWishlisted = movie ? isInWishlist(movie.id) : false;
 
   useEffect(() => {

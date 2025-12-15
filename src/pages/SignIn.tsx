@@ -1,24 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
 import { Eye, EyeOff } from 'lucide-react';
 import { toast } from 'react-toastify';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
-
-// 모바일 감지 훅
-const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(false);
-  
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth <= 960);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
-  }, []);
-  
-  return isMobile;
-};
 
 // 애니메이션 정의
 const fadeIn = keyframes`
@@ -72,13 +58,13 @@ const starFieldMove = keyframes`
   100% { background-position: 520px 360px, -420px 300px, 340px 520px, -260px 440px, 420px 240px, -320px 340px; }
 `;
 
-// 폼 전환용 모션 variants (1초, 부드러운 전환)
+// 폼 전환용 모션 variants
 const formVariants = {
   initial: (isLogin) => ({
     opacity: 0,
-    y: 20,
-    scale: 0.98,
-    filter: 'blur(4px)'
+    y: 12,
+    scale: 0.99,
+    filter: 'blur(2px)'
   }),
   animate: {
     opacity: 1,
@@ -86,18 +72,18 @@ const formVariants = {
     scale: 1,
     filter: 'blur(0px)',
     transition: {
-      duration: 1,
-      ease: [0.4, 0, 0.2, 1],
+      duration: 0.45,
+      ease: [0.25, 0.1, 0.25, 1],
     }
   },
   exit: (isLogin) => ({
     opacity: 0,
-    y: isLogin ? -20 : 20,
-    scale: 0.98,
-    filter: 'blur(4px)',
+    y: isLogin ? -12 : 12,
+    scale: 0.99,
+    filter: 'blur(2px)',
     transition: {
-      duration: 0.5,
-      ease: [0.4, 0, 0.2, 1]
+      duration: 0.35,
+      ease: [0.4, 0, 0.6, 1]
     }
   })
 };
@@ -154,18 +140,9 @@ const Container = styled.div`
     pointer-events: none;
     will-change: background-position, opacity, transform;
   }
-
-  @media (max-width: 960px) {
-    height: 100vh;
-    height: 100dvh;
-    min-height: 100vh;
-    min-height: 100dvh;
-    padding: 12px;
-    overflow: hidden;
-  }
 `;
 
-const Stage = styled.div<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
+const Stage = styled.div`
   position: relative;
   width: min(1120px, 98vw);
   min-height: 660px;
@@ -180,20 +157,14 @@ const Stage = styled.div<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
   overflow: hidden;
   backdrop-filter: blur(12px);
   padding: 40px;
-  
   @media (max-width: 960px) {
     flex-direction: column;
-    width: 100%;
-    height: 100%;
-    min-height: 0;
-    max-height: none;
-    padding: 12px;
-    gap: 12px;
-    border-radius: 12px;
+    min-height: 760px;
+    padding: 0;
   }
 `;
 
-const SlidePanel = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
+const SlidePanel = styled(motion.div)`
   position: relative;
   flex: 1 1 50%;
   min-width: 0;
@@ -238,13 +209,9 @@ const SlidePanel = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: bool
   }
 
   @media (max-width: 960px) {
-    flex: 0 0 auto;
     width: 100%;
-    height: 140px;
-    min-height: 140px;
-    margin: 0;
-    border-radius: 10px;
-    order: ${props => props.$isLoginMode ? 0 : 1};
+    min-height: 240px;
+    height: 240px;
   }
 `;
 
@@ -266,11 +233,6 @@ const SlideContent = styled.div`
   flex-direction: column;
   gap: 14px;
   align-items: center;
-
-  @media (max-width: 960px) {
-    padding: 12px;
-    gap: 8px;
-  }
 `;
 
 const SlideTitle = styled.h3`
@@ -278,10 +240,6 @@ const SlideTitle = styled.h3`
   font-weight: 800;
   letter-spacing: 0.3px;
   margin: 0;
-
-  @media (max-width: 960px) {
-    font-size: 18px;
-  }
 `;
 
 const SlideText = styled.p`
@@ -290,10 +248,6 @@ const SlideText = styled.p`
   color: #f4f4f4;
   font-size: 15px;
   max-width: 320px;
-
-  @media (max-width: 960px) {
-    display: none;
-  }
 `;
 
 const SlideButton = styled.button`
@@ -315,12 +269,6 @@ const SlideButton = styled.button`
     color: rgb(0, 0, 0);
     border-color: rgba(0, 0, 0, 0.25);
   }
-
-  @media (max-width: 960px) {
-    margin-top: 0;
-    padding: 8px 18px;
-    font-size: 13px;
-  }
 `;
 
 const FloatingDot = styled.div`
@@ -334,7 +282,7 @@ const FloatingDot = styled.div`
   animation: ${twinkle} ${props => props.$duration || 6}s ease-in-out infinite;
 `;
 
-const FormColumn = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: boolean }>`
+const FormColumn = styled(motion.div)`
   flex: 1 1 50%;
   min-width: 0;
   display: flex;
@@ -346,14 +294,10 @@ const FormColumn = styled(motion.div)<{ $isMobile?: boolean; $isLoginMode?: bool
   will-change: transform;
 
   @media (max-width: 960px) {
-    flex: 1 1 0;
     width: 100%;
     min-width: auto;
-    min-height: 0;
-    padding: 0;
-    margin: 0;
-    overflow-y: auto;
-    order: ${props => props.$isLoginMode ? 1 : 0};
+    padding: clamp(18px, 4vw, 36px);
+    margin-top: 12px;
   }
 `;
 
@@ -389,14 +333,11 @@ const FormWrapper = styled.div`
     z-index: 1;
   }
 
-  @media (max-width: 960px) {
-    padding: 16px 16px 20px;
+  @media (max-width: 740px) {
+    padding: 32px 24px 32px;
     max-width: 100%;
     background: rgba(0, 0, 0, 0.75);
-    min-height: 0;
-    height: auto;
-    justify-content: flex-start;
-    border-radius: 10px;
+    min-height: auto;
   }
 `;
 
@@ -409,11 +350,6 @@ const Logo = styled.div`
   margin-bottom: 30px;
   letter-spacing: 2px;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
-
-  @media (max-width: 960px) {
-    font-size: 1.8rem;
-    margin-bottom: 12px;
-  }
 `;
 
 const Title = styled.h1`
@@ -422,28 +358,19 @@ const Title = styled.h1`
   font-weight: 700;
   margin-bottom: 28px;
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
-
-  @media (max-width: 960px) {
-    font-size: 22px;
-    margin-bottom: 12px;
-  }
 `;
 
 const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: 16px;
-
-  @media (max-width: 960px) {
-    gap: 8px;
-  }
 `;
 
 const InputGroup = styled.div`
   position: relative;
 `;
 
-const Input = styled.input<{ $hasError?: boolean }>`
+const Input = styled.input`
   width: 100%;
   padding: 18px 22px;
   margin-bottom: 10px;
@@ -463,12 +390,6 @@ const Input = styled.input<{ $hasError?: boolean }>`
 
   &::placeholder {
     color: #8c8c8c;
-  }
-
-  @media (max-width: 960px) {
-    padding: 12px 14px;
-    margin-bottom: 4px;
-    font-size: 14px;
   }
 `;
 
@@ -508,12 +429,6 @@ const SubmitButton = styled.button`
     cursor: not-allowed;
     transform: none;
   }
-
-  @media (max-width: 960px) {
-    padding: 12px;
-    margin-top: 12px;
-    font-size: 14px;
-  }
 `;
 
 const LoadingSpinner = styled.div`
@@ -537,10 +452,6 @@ const CheckboxWrapper = styled.div`
   align-items: center;
   gap: 8px;
   margin-top: 12px;
-
-  @media (max-width: 960px) {
-    margin-top: 4px;
-  }
 `;
 
 const Checkbox = styled.input`
@@ -562,11 +473,6 @@ const SwitchText = styled.p`
   font-size: 16px;
   margin-top: 24px;
   text-align: center;
-
-  @media (max-width: 960px) {
-    font-size: 13px;
-    margin-top: 12px;
-  }
 `;
 
 const SwitchLink = styled.span`
@@ -602,10 +508,6 @@ const InfoBox = styled.div`
     &:hover {
       text-decoration: underline;
     }
-  }
-
-  @media (max-width: 960px) {
-    display: none;
   }
 `;
 
@@ -879,7 +781,6 @@ const TERMS_DATA = {
 const SignIn = () => {
   const navigate = useNavigate();
   const { login, register, isLoading } = useAuth();
-  const isMobile = useIsMobile();
   
   const [isLoginMode, setIsLoginMode] = useState(true);
   const [formData, setFormData] = useState({
@@ -1046,24 +947,13 @@ const SignIn = () => {
     : '빠른 로그인으로 다시 이어보세요. TMDB API Key를 비밀번호 칸에 입력하세요.';
   const slideCta = isLoginMode ? '회원가입으로 전환' : '로그인으로 전환';
 
-  // 데스크톱: 좌우 슬라이드, 모바일: 위아래 슬라이드 + 순서 변경
-  const slidePanelAnimation = isMobile
-    ? { y: isLoginMode ? 0 : 20, opacity: 1, scale: 1 }
-    : { x: isLoginMode ? '0%' : '100%' };
-  
-  const formColumnAnimation = isMobile
-    ? { y: isLoginMode ? 0 : -20, opacity: 1, scale: 1 }
-    : { x: isLoginMode ? '0%' : '-100%' };
-
   return (
     <Container>
-      <Stage $isMobile={isMobile} $isLoginMode={isLoginMode}>
+      <Stage>
         <SlidePanel
           initial={false}
-          animate={slidePanelAnimation}
-          transition={{ type: 'tween', duration: 1, ease: [0.4, 0, 0.2, 1] }}
-          $isMobile={isMobile}
-          $isLoginMode={isLoginMode}
+          animate={{ x: isLoginMode ? '0%' : '100%' }}
+          transition={{ type: 'spring', stiffness: 200, damping: 22 }}
         >
           <SlideOverlay />
           <FloatingDot style={{ top: '18%', left: '16%' }} $size={12} $duration={7} />
@@ -1080,10 +970,8 @@ const SignIn = () => {
 
         <FormColumn
           initial={false}
-          animate={formColumnAnimation}
-          transition={{ type: 'tween', duration: 1, ease: [0.4, 0, 0.2, 1] }}
-          $isMobile={isMobile}
-          $isLoginMode={isLoginMode}
+          animate={{ x: isLoginMode ? '0%' : '-100%' }}
+          transition={{ type: 'spring', stiffness: 200, damping: 22 }}
         >
           <FormWrapper>
             <Logo>M-FLIX</Logo>

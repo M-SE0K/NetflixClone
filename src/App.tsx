@@ -1,4 +1,4 @@
-import { HashRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Provider } from 'react-redux';
 import { store } from './store';
 import { AuthProvider } from './hooks/useAuth';
@@ -94,10 +94,10 @@ function App() {
     <Provider store={store}>
       <AuthProvider>
         <WishlistProvider>
-          <HashRouter>
+          <BrowserRouter basename="/NetflixClone">
             <PageTransition />
             <ToastContainer position="top-right" autoClose={4000} hideProgressBar={false} newestOnTop />
-          </HashRouter>
+          </BrowserRouter>
         </WishlistProvider>
       </AuthProvider>
     </Provider>

@@ -3,6 +3,7 @@ import styled, { keyframes } from 'styled-components';
 import { AnimatePresence, motion } from 'framer-motion';
 import { getImageUrl } from '../../api/tmdb';
 import { useWishlist } from '../../hooks/useWishlist';
+import MovieDetailModal from './MovieDetailModal';
 import type { Movie } from '../../types';
 
 interface BannerProps {
@@ -245,6 +246,7 @@ const WishlistButton = styled(Button)<StyledProps>`
 
 const Banner = ({ movie }: BannerProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
   const { isInWishlist, toggleWishlist } = useWishlist();
 
   const imageUrl = getImageUrl(movie?.backdrop_path ?? null, 'backdrop', 'original');
@@ -317,7 +319,7 @@ const Banner = ({ movie }: BannerProps) => {
             <PlayButton>
               ▶ 재생
             </PlayButton>
-            <InfoButton>
+            <InfoButton onClick={() => setShowDetail(true)}>
               상세 정보
             </InfoButton>
             <WishlistButton 
@@ -330,6 +332,13 @@ const Banner = ({ movie }: BannerProps) => {
           </ButtonGroup>
         </Content>
       </AnimatePresence>
+
+      {showDetail && (
+        <MovieDetailModal
+          movie={movie}
+          onClose={() => setShowDetail(false)}
+        />
+      )}
     </BannerContainer>
   );
 };

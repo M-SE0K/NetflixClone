@@ -82,13 +82,26 @@ const RowHeader = styled.div`
   }
 `;
 
+/** 제목 + 모두 보기 래퍼 (모바일에서 전체 클릭 가능) */
+const TitleWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  
+  @media (max-width: 768px) {
+    flex: 1;
+  }
+`;
+
 const RowTitle = styled.h2`
   color: #e5e5e5;
   font-size: 1.4rem;
   font-weight: 700;
   transition: color 0.2s;
+  margin: 0;
 
-  &:hover {
+  ${TitleWrapper}:hover & {
     color: #fff;
   }
 
@@ -97,6 +110,7 @@ const RowTitle = styled.h2`
   }
 `;
 
+/** 데스크톱용 모두 보기 (호버 시 표시) */
 const ExploreLink = styled.span`
   color: #54b9c5;
   font-size: 13px;
@@ -106,6 +120,7 @@ const ExploreLink = styled.span`
   gap: 4px;
   opacity: 0;
   transition: opacity 0.2s;
+  white-space: nowrap;
 
   ${RowContainer}:hover & {
     opacity: 1;
@@ -113,6 +128,41 @@ const ExploreLink = styled.span`
 
   &:hover {
     text-decoration: underline;
+  }
+
+  /* 모바일에서 숨김 */
+  @media (max-width: 768px) {
+    display: none;
+  }
+`;
+
+/** 모바일용 모두 보기 버튼 (항상 표시) */
+const MobileExploreButton = styled.button`
+  display: none;
+  
+  @media (max-width: 768px) {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: rgba(84, 185, 197, 0.15);
+    border: 1px solid rgba(84, 185, 197, 0.3);
+    color: #54b9c5;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    
+    &:active {
+      background: rgba(84, 185, 197, 0.25);
+      transform: scale(0.95);
+    }
+    
+    span {
+      font-size: 14px;
+    }
   }
 `;
 
@@ -577,10 +627,18 @@ const MovieRow = ({
     <>
       <RowContainer>
         <RowHeader>
-          <RowTitle>{title}</RowTitle>
-          <ExploreLink onClick={openModal}>
+          {/* 제목 + 데스크톱 모두보기 (클릭 시 모달 열기) */}
+          <TitleWrapper onClick={openModal}>
+            <RowTitle>{title}</RowTitle>
+            <ExploreLink>
+              모두 보기 <span>›</span>
+            </ExploreLink>
+          </TitleWrapper>
+          
+          {/* 모바일 전용 모두보기 버튼 (항상 표시) */}
+          <MobileExploreButton onClick={openModal}>
             모두 보기 <span>›</span>
-          </ExploreLink>
+          </MobileExploreButton>
         </RowHeader>
 
         <SliderWrapper>

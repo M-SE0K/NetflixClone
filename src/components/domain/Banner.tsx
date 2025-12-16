@@ -1,3 +1,11 @@
+/**
+ * Banner.tsx - 메인 배너 컴포넌트
+ * 
+ * 홈 화면 상단에 표시되는 영화 배너입니다.
+ * 트렌딩 영화의 정보를 시각적으로 표시하고,
+ * 재생, 상세보기, 찜하기 기능을 제공합니다.
+ */
+
 import { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -6,8 +14,12 @@ import { useWishlist } from '../../hooks/useWishlist';
 import MovieDetailModal from './MovieDetailModal';
 import type { Movie } from '../../types';
 
+// ============================================
+// 타입 정의
+// ============================================
+
 interface BannerProps {
-  movie: Movie | null;
+  movie: Movie | null;  // 표시할 영화 데이터
 }
 
 interface StyledProps {
@@ -16,11 +28,17 @@ interface StyledProps {
   $isActive?: boolean;
 }
 
+// ============================================
+// 애니메이션 정의
+// ============================================
+
+/** 페이드 인 애니메이션 */
 const fadeIn = keyframes`
   from { opacity: 0; }
   to { opacity: 1; }
 `;
 
+/** 슬라이드 업 애니메이션 */
 const slideUp = keyframes`
   from { 
     opacity: 0; 
@@ -32,6 +50,11 @@ const slideUp = keyframes`
   }
 `;
 
+// ============================================
+// Styled Components
+// ============================================
+
+/** 배너 컨테이너 - 전체 배너 영역 */
 const BannerContainer = styled.div`
   position: relative;
   height: 80vh;
@@ -41,7 +64,7 @@ const BannerContainer = styled.div`
   display: flex;
   align-items: center;
   animation: ${fadeIn} 0.8s ease;
-  margin-bottom: -100px;
+  margin-bottom: -100px;  /* 다음 섹션과 자연스러운 오버랩 */
 
   @media (max-width: 768px) {
     height: 60vh;
@@ -50,6 +73,7 @@ const BannerContainer = styled.div`
   }
 `;
 
+/** 배경 이미지 - 영화 배경 사진 표시 */
 const BackgroundImage = styled(motion.div)<StyledProps>`
   position: absolute;
   top: 0;
@@ -64,6 +88,7 @@ const BackgroundImage = styled(motion.div)<StyledProps>`
   transition: opacity 0.35s ease;
   background-color: #0f0f0f;
 
+  /* 그라디언트 오버레이: 텍스트 가독성 향상 */
   &::after {
     content: '';
     position: absolute;
@@ -101,6 +126,7 @@ const BackgroundImage = styled(motion.div)<StyledProps>`
   }
 `;
 
+/** 콘텐츠 영역 - 영화 정보 표시 */
 const Content = styled(motion.div)`
   padding: 0 4%;
   max-width: 600px;
@@ -112,6 +138,7 @@ const Content = styled(motion.div)`
   }
 `;
 
+/** 영화 제목 */
 const Title = styled.h1`
   font-size: 3.5rem;
   font-weight: 800;
@@ -131,6 +158,7 @@ const Title = styled.h1`
   }
 `;
 
+/** 영화 메타 정보 (평점, 개봉연도) */
 const Info = styled.div`
   display: flex;
   align-items: center;
@@ -144,11 +172,12 @@ const Info = styled.div`
   }
 `;
 
+/** 평점 표시 */
 const Rating = styled.span`
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #46d369;
+  color: #46d369;  /* 넷플릭스 스타일 녹색 */
   font-weight: 700;
   font-size: 16px;
 
@@ -157,6 +186,7 @@ const Rating = styled.span`
   }
 `;
 
+/** 개봉 연도 */
 const Year = styled.span`
   color: #b3b3b3;
   font-size: 16px;
@@ -166,6 +196,7 @@ const Year = styled.span`
   }
 `;
 
+/** 줄거리 (4줄 제한) */
 const Overview = styled.p`
   font-size: 1.1rem;
   color: #e5e5e5;
@@ -184,6 +215,7 @@ const Overview = styled.p`
   }
 `;
 
+/** 버튼 그룹 */
 const ButtonGroup = styled.div`
   display: flex;
   gap: 12px;
@@ -194,6 +226,7 @@ const ButtonGroup = styled.div`
   }
 `;
 
+/** 기본 버튼 스타일 */
 const Button = styled.button`
   display: flex;
   align-items: center;
@@ -213,6 +246,7 @@ const Button = styled.button`
   }
 `;
 
+/** 재생 버튼 (흰색 배경) */
 const PlayButton = styled(Button)`
   background: #fff;
   color: #141414;
@@ -223,6 +257,7 @@ const PlayButton = styled(Button)`
   }
 `;
 
+/** 상세정보 버튼 (회색 배경) */
 const InfoButton = styled(Button)`
   background: rgba(109, 109, 110, 0.7);
   color: #fff;
@@ -232,6 +267,7 @@ const InfoButton = styled(Button)`
   }
 `;
 
+/** 찜 버튼 (토글 가능) */
 const WishlistButton = styled(Button)<StyledProps>`
   background: ${props => props.$isActive ? '#e50914' : 'rgba(109, 109, 110, 0.7)'};
   color: #fff;
@@ -244,17 +280,39 @@ const WishlistButton = styled(Button)<StyledProps>`
   }
 `;
 
+// ============================================
+// 컴포넌트
+// ============================================
+
+/**
+ * Banner 컴포넌트
+ * 
+ * 홈 화면의 메인 배너로, 트렌딩 영화의 정보를 표시합니다.
+ * 10초마다 자동으로 다음 영화로 전환됩니다 (Redux로 관리)
+ * 
+ * @param movie - 표시할 영화 데이터
+ */
 const Banner = ({ movie }: BannerProps) => {
+  // 이미지 로딩 상태
   const [imageLoaded, setImageLoaded] = useState(false);
+  // 상세보기 모달 표시 상태
   const [showDetail, setShowDetail] = useState(false);
+  // 찜 목록 관련 함수
   const { isInWishlist, toggleWishlist } = useWishlist();
 
+  // 배경 이미지 URL 생성
   const imageUrl = getImageUrl(movie?.backdrop_path ?? null, 'backdrop', 'original');
+  // 현재 영화가 찜 목록에 있는지 확인
   const isWishlisted = movie ? isInWishlist(movie.id) : false;
 
+  /**
+   * 이미지 프리로딩
+   * 배경 이미지를 미리 로드하여 부드러운 전환 구현
+   */
   useEffect(() => {
     let isMounted = true;
     setImageLoaded(false);
+    
     if (imageUrl) {
       const img = new Image();
       img.src = imageUrl;
@@ -262,18 +320,23 @@ const Banner = ({ movie }: BannerProps) => {
         if (isMounted) setImageLoaded(true);
       };
     }
+    
     return () => {
       isMounted = false;
     };
   }, [imageUrl]);
 
+  // 영화 데이터가 없으면 렌더링하지 않음
   if (!movie) return null;
 
+  // 개봉 연도 추출 (YYYY-MM-DD에서 YYYY만)
   const releaseYear = movie.release_date?.split('-')[0] || '';
+  // 평점 포맷팅 (소수점 1자리)
   const rating = movie.vote_average?.toFixed(1) || 'N/A';
 
   return (
     <BannerContainer>
+      {/* 배경 이미지 - 애니메이션 적용 */}
       <AnimatePresence mode="wait">
         {imageUrl && imageLoaded && (
           <BackgroundImage
@@ -293,6 +356,7 @@ const Banner = ({ movie }: BannerProps) => {
         )}
       </AnimatePresence>
       
+      {/* 콘텐츠 영역 - 영화 정보 */}
       <AnimatePresence mode="wait">
         <Content
           key={movie.id || imageUrl}
@@ -315,6 +379,7 @@ const Banner = ({ movie }: BannerProps) => {
 
           <Overview>{movie.overview || '줄거리 정보가 없습니다.'}</Overview>
 
+          {/* 액션 버튼 그룹 */}
           <ButtonGroup>
             <PlayButton>
               ▶ 재생
@@ -333,6 +398,7 @@ const Banner = ({ movie }: BannerProps) => {
         </Content>
       </AnimatePresence>
 
+      {/* 상세보기 모달 */}
       {showDetail && (
         <MovieDetailModal
           movie={movie}
@@ -344,4 +410,3 @@ const Banner = ({ movie }: BannerProps) => {
 };
 
 export default Banner;
-

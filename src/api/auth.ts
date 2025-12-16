@@ -1,20 +1,42 @@
 /**
- * Authentication Utility Functions
+ * auth.ts - 인증 관련 유틸리티 함수
+ * 
  * Local Storage를 활용한 사용자 인증 관리
+ * TMDB API Key를 비밀번호로 사용하는 특수한 인증 방식
  */
 
 import type { AuthResult, User } from '../types';
 
-// Local Storage 키 상수
+// ============================================
+// 상수 정의
+// ============================================
+
+/**
+ * Local Storage 키 상수
+ * 인증 관련 데이터 저장에 사용
+ */
 const STORAGE_KEYS = {
-  USERS: 'users',
-  TMDB_KEY: 'TMDb-Key',
-  CURRENT_USER: 'currentUser',
-  REMEMBER_ME: 'rememberMe'
+  USERS: 'users',            // 등록된 사용자 목록
+  TMDB_KEY: 'TMDb-Key',      // TMDB API Key
+  CURRENT_USER: 'currentUser', // 현재 로그인된 사용자
+  REMEMBER_ME: 'rememberMe'  // 로그인 상태 유지 여부
 } as const;
+
+// ============================================
+// 인증 함수
+// ============================================
 
 /**
  * 로그인 시도
+ * 
+ * 1. 저장된 사용자 목록에서 이메일/비밀번호 확인
+ * 2. TMDB API Key 유효성 검증
+ * 3. 성공 시 인증 정보 저장
+ * 
+ * @param email - 사용자 이메일
+ * @param password - TMDB API Key
+ * @param rememberMe - 로그인 상태 유지 여부
+ * @returns 로그인 결과
  */
 export const tryLogin = async (
   email: string,
@@ -26,13 +48,13 @@ export const tryLogin = async (
     const usersData = localStorage.getItem(STORAGE_KEYS.USERS);
     const users: User[] = usersData ? JSON.parse(usersData) : [];
 
-    // 사용자 찾기
+    // 사용자 찾기 (이메일과 비밀번호 일치 확인)
     const user = users.find(
       (u) => u.id === email && u.password === password
     );
 
     if (user) {
-      // API 키 유효성 검증 (TMDB API 호출 테스트)
+      // API 키 유효성 검증 (실제 TMDB API 호출 테스트)
       const isValidKey = await validateTMDbKey(password);
       
       if (!isValidKey) {
@@ -42,13 +64,16 @@ export const tryLogin = async (
         };
       }
 
-      // 로그인 성공 - 정보 저장
+      // 로그인 성공 - Local Storage에 정보 저장
       localStorage.setItem(STORAGE_KEYS.TMDB_KEY, password);
       localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify({ email: user.id }));
       
+      // rememberMe 여부에 따라 저장 위치 결정
       if (rememberMe) {
+        // 영구 저장 (브라우저 닫아도 유지)
         localStorage.setItem(STORAGE_KEYS.REMEMBER_ME, 'true');
       } else {
+        // 세션 저장 (브라우저 닫으면 삭제)
         sessionStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify({ email: user.id }));
         sessionStorage.setItem(STORAGE_KEYS.TMDB_KEY, password);
       }
@@ -73,13 +98,22 @@ export const tryLogin = async (
 
 /**
  * 회원가입 시도
+ * 
+ * 1. 이메일 형식 검증
+ * 2. TMDB API Key 유효성 검증
+ * 3. 중복 사용자 확인
+ * 4. 새 사용자 등록
+ * 
+ * @param email - 사용자 이메일
+ * @param password - TMDB API Key
+ * @returns 회원가입 결과
  */
 export const tryRegister = async (
   email: string,
   password: string
 ): Promise<AuthResult> => {
   try {
-    // 이메일 형식 검증
+    // 이메일 형식 검증 (정규식 사용)
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return {
@@ -127,6 +161,10 @@ export const tryRegister = async (
 
 /**
  * TMDB API Key 유효성 검증
+ * 실제 TMDB API를 호출하여 키가 유효한지 확인
+ * 
+ * @param apiKey - 검증할 API Key
+ * @returns 유효 여부
  */
 export const validateTMDbKey = async (apiKey: string): Promise<boolean> => {
   try {
@@ -141,6 +179,7 @@ export const validateTMDbKey = async (apiKey: string): Promise<boolean> => {
 
 /**
  * 로그아웃
+ * 모든 인증 관련 데이터를 Local Storage와 Session Storage에서 삭제
  */
 export const logout = (): void => {
   localStorage.removeItem(STORAGE_KEYS.TMDB_KEY);
@@ -152,17 +191,22 @@ export const logout = (): void => {
 
 /**
  * 현재 로그인 상태 확인
+ * Local Storage 또는 Session Storage에 유효한 인증 정보가 있는지 확인
+ * 
+ * @returns 로그인 상태
  */
 export const isAuthenticated = (): boolean => {
   const rememberMe = localStorage.getItem(STORAGE_KEYS.REMEMBER_ME);
   
   if (rememberMe === 'true') {
+    // rememberMe가 활성화된 경우 Local Storage만 확인
     return !!(
       localStorage.getItem(STORAGE_KEYS.TMDB_KEY) &&
       localStorage.getItem(STORAGE_KEYS.CURRENT_USER)
     );
   }
   
+  // 그 외의 경우 Local Storage와 Session Storage 모두 확인
   return !!(
     (localStorage.getItem(STORAGE_KEYS.TMDB_KEY) || sessionStorage.getItem(STORAGE_KEYS.TMDB_KEY)) &&
     (localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || sessionStorage.getItem(STORAGE_KEYS.CURRENT_USER))
@@ -171,6 +215,8 @@ export const isAuthenticated = (): boolean => {
 
 /**
  * 현재 사용자 정보 가져오기
+ * 
+ * @returns 현재 사용자 객체 또는 null
  */
 export const getCurrentUser = (): { email: string } | null => {
   const userData = localStorage.getItem(STORAGE_KEYS.CURRENT_USER) || 
@@ -180,9 +226,10 @@ export const getCurrentUser = (): { email: string } | null => {
 
 /**
  * 저장된 TMDB API Key 가져오기
+ * 
+ * @returns API Key 문자열 또는 null
  */
 export const getApiKey = (): string | null => {
   return localStorage.getItem(STORAGE_KEYS.TMDB_KEY) || 
          sessionStorage.getItem(STORAGE_KEYS.TMDB_KEY);
 };
-

@@ -1,4 +1,11 @@
-import { useState, useEffect, useMemo } from 'react';
+/**
+ * Home.tsx - 홈 페이지
+ * 
+ * 넷플릭스 스타일의 메인 홈 화면입니다.
+ * 트렌딩 영화 배너와 카테고리별 영화 슬라이더를 표시합니다.
+ */
+
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { nextBanner, resetBanner } from '../store';
 import type { RootState } from '../store';
@@ -6,17 +13,49 @@ import styled, { keyframes } from 'styled-components';
 import Header from '../components/common/Header';
 import Banner from '../components/domain/Banner';
 import MovieRow from '../components/domain/MovieRow';
-import { getHomePageData, getImageUrl } from '../api/tmdb';
-import type { Movie, HomePageData } from '../types';
+import { 
+  getHomePageData, 
+  getImageUrl,
+  getTrendingMovies,
+  getNowPlayingMovies,
+  getPopularMovies,
+  getTopRatedMovies,
+  getUpcomingMovies,
+  getMoviesByGenre,
+  GENRE_IDS
+} from '../api/tmdb';
+import type { Movie, HomePageData, TMDBResponse } from '../types';
+
+// ============================================
+// 타입 정의
+// ============================================
 
 interface HighlightThumbProps {
   $image: string;
 }
 
+// ============================================
+// 애니메이션 정의
+// ============================================
+
 const fadeIn = keyframes`
   from { opacity: 0; }
   to { opacity: 1; }
 `;
+
+const spin = keyframes`
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+`;
+
+const pulse = keyframes`
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+`;
+
+// ============================================
+// Styled Components
+// ============================================
 
 const PageContainer = styled.div`
   min-height: 100vh;
@@ -54,16 +93,6 @@ const LoadingContainer = styled.div`
               radial-gradient(circle at 80% 10%, rgba(109, 109, 110, 0.08), transparent 35%),
               #0f0f0f;
   gap: 20px;
-`;
-
-const spin = keyframes`
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-`;
-
-const pulse = keyframes`
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.5; }
 `;
 
 const LoadingSpinner = styled.div`
@@ -237,12 +266,20 @@ const Dot = styled.span`
   color: #555;
 `;
 
+// ============================================
+// 컴포넌트
+// ============================================
+
 const Home = () => {
   const [movieData, setMovieData] = useState<HomePageData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const dispatch = useDispatch();
   const bannerIndex = useSelector((state: RootState) => state.ui.bannerIndex);
+
+  // ============================================
+  // 데이터 로드 함수
+  // ============================================
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -260,12 +297,71 @@ const Home = () => {
     }
   };
 
+  // ============================================
+  // 무한 스크롤용 Fetch 함수들
+  // ============================================
+
+  /** 트렌딩 영화 추가 로드 */
+  const fetchTrending = useCallback(async (page: number): Promise<TMDBResponse<Movie>> => {
+    // 트렌딩은 페이지네이션 지원이 제한적이므로 인기 영화로 대체
+    return getPopularMovies(page);
+  }, []);
+
+  /** 현재 상영 중 영화 추가 로드 */
+  const fetchNowPlaying = useCallback(async (page: number): Promise<TMDBResponse<Movie>> => {
+    return getNowPlayingMovies(page);
+  }, []);
+
+  /** 인기 영화 추가 로드 */
+  const fetchPopular = useCallback(async (page: number): Promise<TMDBResponse<Movie>> => {
+    return getPopularMovies(page);
+  }, []);
+
+  /** 최고 평점 영화 추가 로드 */
+  const fetchTopRated = useCallback(async (page: number): Promise<TMDBResponse<Movie>> => {
+    return getTopRatedMovies(page);
+  }, []);
+
+  /** 개봉 예정 영화 추가 로드 */
+  const fetchUpcoming = useCallback(async (page: number): Promise<TMDBResponse<Movie>> => {
+    return getUpcomingMovies(page);
+  }, []);
+
+  /** 액션 영화 추가 로드 */
+  const fetchAction = useCallback(async (page: number): Promise<TMDBResponse<Movie>> => {
+    return getMoviesByGenre(GENRE_IDS.ACTION, page);
+  }, []);
+
+  /** 코미디 영화 추가 로드 */
+  const fetchComedy = useCallback(async (page: number): Promise<TMDBResponse<Movie>> => {
+    return getMoviesByGenre(GENRE_IDS.COMEDY, page);
+  }, []);
+
+  /** 공포 영화 추가 로드 */
+  const fetchHorror = useCallback(async (page: number): Promise<TMDBResponse<Movie>> => {
+    return getMoviesByGenre(GENRE_IDS.HORROR, page);
+  }, []);
+
+  /** 로맨스 영화 추가 로드 */
+  const fetchRomance = useCallback(async (page: number): Promise<TMDBResponse<Movie>> => {
+    return getMoviesByGenre(GENRE_IDS.ROMANCE, page);
+  }, []);
+
+  /** 다큐멘터리 추가 로드 */
+  const fetchDocumentary = useCallback(async (page: number): Promise<TMDBResponse<Movie>> => {
+    return getMoviesByGenre(GENRE_IDS.DOCUMENTARY, page);
+  }, []);
+
+  // ============================================
+  // 배너 관련 로직
+  // ============================================
+
   const bannerCandidates = useMemo(() => {
     if (!movieData || !movieData.trending) return [];
     return movieData.trending.slice(0, 5);
   }, [movieData]);
 
-  // 10초 자동 슬라이드 (수동 조작 없음)
+  // 10초 자동 슬라이드
   useEffect(() => {
     if (!bannerCandidates.length) return;
     const interval = setInterval(() => {
@@ -302,6 +398,10 @@ const Home = () => {
       { label: '웃음 보장', movie: movieData.comedyMovies?.[0] },
     ].filter(item => item.movie) as { label: string; movie: Movie }[];
   }, [movieData]);
+
+  // ============================================
+  // 렌더링
+  // ============================================
 
   if (isLoading) {
     return (
@@ -371,67 +471,87 @@ const Home = () => {
         </GlassSection>
         
         <RowsContainer>
+          {/* 트렌딩 - 무한 스크롤 지원 */}
           <MovieRow 
             title="지금 뜨는 콘텐츠"
             movies={movieData.trending}
             isLargeRow
             onMovieClick={handleMovieClick}
+            fetchMore={fetchTrending}
           />
           
+          {/* 현재 상영 중 - 무한 스크롤 지원 */}
           <MovieRow 
             title="현재 상영 중"
             movies={movieData.nowPlaying}
             onMovieClick={handleMovieClick}
+            fetchMore={fetchNowPlaying}
           />
           
+          {/* 인기 영화 - 무한 스크롤 지원 */}
           <MovieRow 
             title="인기 영화"
             movies={movieData.popular}
             onMovieClick={handleMovieClick}
+            fetchMore={fetchPopular}
           />
           
+          {/* 최고 평점 - 무한 스크롤 지원 */}
           <MovieRow 
             title="최고 평점"
             movies={movieData.topRated}
             isLargeRow
             onMovieClick={handleMovieClick}
+            fetchMore={fetchTopRated}
           />
           
+          {/* 개봉 예정 - 무한 스크롤 지원 */}
           <MovieRow 
             title="개봉 예정"
             movies={movieData.upcoming}
             onMovieClick={handleMovieClick}
+            fetchMore={fetchUpcoming}
           />
           
+          {/* 액션 영화 - 무한 스크롤 지원 */}
           <MovieRow 
             title="액션 영화"
             movies={movieData.actionMovies}
             onMovieClick={handleMovieClick}
+            fetchMore={fetchAction}
           />
           
+          {/* 코미디 영화 - 무한 스크롤 지원 */}
           <MovieRow 
             title="코미디 영화"
             movies={movieData.comedyMovies}
             onMovieClick={handleMovieClick}
+            fetchMore={fetchComedy}
           />
           
+          {/* 공포 영화 - 무한 스크롤 지원 */}
           <MovieRow 
             title="공포 영화"
             movies={movieData.horrorMovies}
             onMovieClick={handleMovieClick}
+            fetchMore={fetchHorror}
           />
           
+          {/* 로맨스 영화 - 무한 스크롤 지원 */}
           <MovieRow 
             title="로맨스 영화"
             movies={movieData.romanceMovies}
             isLargeRow
             onMovieClick={handleMovieClick}
+            fetchMore={fetchRomance}
           />
           
+          {/* 다큐멘터리 - 무한 스크롤 지원 */}
           <MovieRow 
             title="다큐멘터리"
             movies={movieData.documentaries}
             onMovieClick={handleMovieClick}
+            fetchMore={fetchDocumentary}
           />
         </RowsContainer>
       </MainContent>
@@ -440,4 +560,3 @@ const Home = () => {
 };
 
 export default Home;
-

@@ -1,3 +1,13 @@
+/**
+ * SignIn.tsx - 로그인/회원가입 페이지
+ * 
+ * 사용자 인증을 처리하는 페이지입니다.
+ * - 로그인 모드와 회원가입 모드 전환
+ * - 모바일/데스크톱 반응형 디자인
+ * - 부드러운 폼 전환 애니메이션
+ * - TMDB API Key 검증
+ */
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styled, { keyframes } from 'styled-components';
@@ -6,7 +16,14 @@ import { toast } from 'react-toastify';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useAuth } from '../hooks/useAuth';
 
-// 모바일 감지 훅
+// ============================================
+// 커스텀 훅
+// ============================================
+
+/**
+ * 모바일 환경 감지 훅
+ * 화면 너비 960px 이하를 모바일로 판단
+ */
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -18,7 +35,11 @@ const useIsMobile = () => {
   return isMobile;
 };
 
+// ============================================
 // 애니메이션 정의
+// ============================================
+
+/** 페이드 인 애니메이션 */
 const fadeIn = keyframes`
   from {
     opacity: 0;
@@ -36,13 +57,20 @@ const shake = keyframes`
   40%, 80% { transform: translateX(5px); }
 `;
 
-// 성능 최적화: 단순한 애니메이션만 사용
+/** 배경 글로우 애니메이션 (성능 최적화: 단순한 opacity 변화만) */
 const subtleGlow = keyframes`
   0%, 100% { opacity: 0.6; }
   50% { opacity: 0.8; }
 `;
 
-// 폼 전환용 모션 variants - 성능 최적화
+// ============================================
+// Framer Motion Variants
+// ============================================
+
+/**
+ * 폼 전환 애니메이션 설정
+ * 성능 최적화를 위해 GPU 가속이 적은 속성만 사용
+ */
 const formVariants = {
   initial: {
     opacity: 0,
@@ -66,7 +94,15 @@ const formVariants = {
   }
 };
 
-// Styled Components - 성능 최적화 버전
+// ============================================
+// Styled Components
+// ============================================
+
+/** 
+ * 최상위 컨테이너
+ * - 전체 화면을 채우는 배경
+ * - 그라디언트와 장식 효과 포함
+ */
 const Container = styled.div`
   min-height: 100vh;
   display: flex;
@@ -770,32 +806,78 @@ const TERMS_DATA = {
   }
 };
 
+// ============================================
+// SignIn 컴포넌트
+// ============================================
+
+/**
+ * SignIn 컴포넌트
+ * 
+ * 로그인과 회원가입 기능을 제공하는 통합 인증 페이지입니다.
+ * 
+ * 주요 기능:
+ * - 로그인/회원가입 모드 전환 (슬라이딩 애니메이션)
+ * - TMDB API Key를 비밀번호로 사용
+ * - 모바일/데스크톱 반응형 레이아웃
+ * - 이용약관/개인정보처리방침 동의 (회원가입 시)
+ * - 로그인 상태 유지 옵션 (Remember Me)
+ * 
+ * 애니메이션:
+ * - 데스크톱: 좌우 슬라이딩
+ * - 모바일: 상하 슬라이딩
+ */
 const SignIn = () => {
+  // 라우터 네비게이션
   const navigate = useNavigate();
+  // 인증 관련 함수 및 상태
   const { login, register, isLoading } = useAuth();
+  // 모바일 환경 여부
   const isMobile = useIsMobile();
   
+  // ============================================
+  // 상태 관리
+  // ============================================
+  
+  // 현재 모드 (true: 로그인, false: 회원가입)
   const [isLoginMode, setIsLoginMode] = useState(true);
+  
+  // 폼 입력값
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    confirmPassword: ''
+    email: '',           // 이메일 주소
+    password: '',        // TMDB API Key
+    confirmPassword: ''  // API Key 확인 (회원가입 시)
   });
+  
+  // 비밀번호 표시 토글
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // 로그인 상태 유지 옵션
   const [rememberMe, setRememberMe] = useState(false);
+  
+  // 유효성 검사 에러 메시지
   const [errors, setErrors] = useState({});
+  // 서버/API 에러 메시지
   const [submitError, setSubmitError] = useState('');
   
-  // 약관 동의 상태
+  // 약관 동의 상태 (회원가입 시 필요)
   const [agreements, setAgreements] = useState({
     all: false,
     terms: false,
     privacy: false,
     age: false
   });
+  // 약관 상세보기 모달 상태
   const [termsModal, setTermsModal] = useState({ open: false, type: null });
 
+  // ============================================
+  // 유효성 검사
+  // ============================================
+
+  /**
+   * 폼 유효성 검사
+   * @returns 유효하면 true, 그렇지 않으면 false
+   */
   const validateForm = () => {
     const newErrors = {};
 
@@ -832,6 +914,14 @@ const SignIn = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // ============================================
+  // 이벤트 핸들러
+  // ============================================
+
+  /**
+   * 입력 필드 변경 핸들러
+   * 입력값 업데이트 및 해당 필드 에러 제거
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -849,7 +939,10 @@ const SignIn = () => {
     setSubmitError('');
   };
 
-  // 약관 동의 핸들러
+  /**
+   * 약관 동의 체크박스 핸들러
+   * '전체 동의' 선택 시 모든 항목 일괄 처리
+   */
   const handleAgreementChange = (type) => {
     if (type === 'all') {
       const newValue = !agreements.all;
@@ -875,6 +968,10 @@ const SignIn = () => {
     }
   };
 
+  /**
+   * 폼 제출 핸들러
+   * 로그인 또는 회원가입 API 호출
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -914,6 +1011,10 @@ const SignIn = () => {
     }
   };
 
+  /**
+   * 로그인/회원가입 모드 전환
+   * 상태 초기화 및 애니메이션 트리거
+   */
   const toggleMode = () => {
     setIsLoginMode(!isLoginMode);
     setErrors({});
@@ -926,35 +1027,62 @@ const SignIn = () => {
     setAgreements({ all: false, terms: false, privacy: false, age: false });
   };
 
+  /** 약관 상세보기 모달 열기 */
   const openTermsModal = (type) => {
     setTermsModal({ open: true, type });
   };
 
+  /** 약관 상세보기 모달 닫기 */
   const closeTermsModal = () => {
     setTermsModal({ open: false, type: null });
   };
 
+  // ============================================
+  // 동적 콘텐츠 (모드에 따라 변경)
+  // ============================================
+  
+  // 슬라이드 패널 텍스트
   const slideTitle = isLoginMode ? 'Hello Friend' : 'Welcome Back!';
   const slideText = isLoginMode
     ? '새 계정을 만들고 최신 콘텐츠를 감상하세요.'
     : '빠른 로그인으로 다시 이어보세요. TMDB API Key를 비밀번호 칸에 입력하세요.';
   const slideCta = isLoginMode ? '회원가입으로 전환' : '로그인으로 전환';
 
-  // 모바일/데스크톱 애니메이션 분기
+  // ============================================
+  // 애니메이션 설정 (반응형)
+  // ============================================
+  
+  /**
+   * 슬라이드 패널 애니메이션
+   * - 데스크톱: 좌우 이동 (x축)
+   * - 모바일: 상하 이동 (y축)
+   */
   const slidePanelAnimation = isMobile
     ? { y: isLoginMode ? 0 : 20, opacity: 1 }
     : { x: isLoginMode ? '0%' : '100%' };
 
+  /**
+   * 폼 컬럼 애니메이션
+   * 슬라이드 패널과 반대 방향으로 이동
+   */
   const formColumnAnimation = isMobile
     ? { y: isLoginMode ? 0 : -20, opacity: 1 }
     : { x: isLoginMode ? '0%' : '-100%' };
 
+  /**
+   * 트랜지션 설정
+   * tween 타입으로 부드러운 전환 구현
+   */
   const transitionConfig = {
     type: 'tween' as const,
     duration: 0.5,
     ease: [0.4, 0, 0.2, 1] as [number, number, number, number]
   };
 
+  // ============================================
+  // 렌더링
+  // ============================================
+  
   return (
     <Container>
       <Stage $isMobile={isMobile}>

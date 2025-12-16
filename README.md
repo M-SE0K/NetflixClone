@@ -40,7 +40,7 @@ cd NetflixClone
 # 2. 의존성 설치
 npm install
 
-# 3. 프로젝트 설정 (환경 변수 자동 생성)
+# 3. 프로젝트 설정 스크립트 (환경 변수 자동 생성)
 npm run setup
 
 # 4. 개발 서버 시작
@@ -225,7 +225,7 @@ GitHub Actions를 통한 자동 배포가 설정되어 있습니다.
 ### GitHub Actions 워크플로우
 
 `.github/workflows/deploy.yml`:
-- **트리거**: main 브랜치 push 또는 수동 실행
+- **트리거**: main 브랜치 pr 트리커
 - **Node.js**: 18.x
 - **빌드**: `npm ci` → `npm run build`
 - **배포**: GitHub Pages artifact 업로드
